@@ -29,9 +29,6 @@
 				<!-- Accept URLs only -->
 				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
 				<integer>1</integer>
-				<!-- Also accept plain text that contains URLs -->
-				<key>NSExtensionActivationSupportsText</key>
-				<true/>
 			</dict>
 		</dict>
 		<key>NSExtensionMainStoryboard</key>
