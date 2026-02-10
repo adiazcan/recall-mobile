@@ -3,77 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:recall/src/app/app.dart';
 import 'package:recall/src/app/providers.dart';
-import 'package:recall/src/auth/auth_service.dart';
 import 'package:recall/src/auth/auth_state.dart';
-import 'package:recall/src/auth/token_store.dart';
 import 'package:recall/src/config/app_config.dart';
 import 'package:recall/src/openapi/openapi_repository.dart';
 
 // Mock AuthStateNotifier that returns authenticated state
 class MockAuthStateNotifier extends AuthStateNotifier {
-  MockAuthStateNotifier()
-    : super(authService: _MockAuthService(), tokenStore: _MockTokenStore());
-
   @override
   Future<AuthState> build() async {
     return const AuthState(status: AuthStatus.authenticated);
   }
-}
-
-// Minimal mocks for dependencies
-class _MockAuthService implements AuthService {
-  @override
-  String get clientId => 'mock-client-id';
-
-  @override
-  String get tenantId => 'mock-tenant-id';
-
-  @override
-  String get redirectUri => 'mock://redirect';
-
-  @override
-  TokenStore get tokenStore => _MockTokenStore();
-
-  @override
-  Future<String?> acquireTokenSilent() async => 'mock-token';
-
-  @override
-  Future<String> signIn() async => 'mock-token';
-
-  @override
-  Future<String> refreshToken() async => 'mock-token';
-
-  @override
-  Future<void> signOut() async {}
-}
-
-class _MockTokenStore implements TokenStore {
-  @override
-  Future<String?> getToken() async => 'mock-token';
-
-  @override
-  Future<void> saveToken(String token) async {}
-
-  @override
-  Future<void> deleteToken() async {}
-
-  @override
-  Future<void> setTokens({
-    required String accessToken,
-    required String refreshToken,
-    DateTime? expiresAt,
-  }) async {}
-
-  @override
-  Future<Tokens?> readTokens() async {
-    return const Tokens(
-      accessToken: 'mock-token',
-      refreshToken: 'mock-refresh',
-    );
-  }
-
-  @override
-  Future<void> clear() async {}
 }
 
 class DelayedOpenApiRepository extends OpenApiRepository {
@@ -135,8 +74,11 @@ void main() {
       ),
     );
 
-    // Wait for initial route to settle
-    await tester.pumpAndSettle();
+    // Wait for initial route to load
+    // Note: Using pump() instead of pumpAndSettle() because
+    // ReceiveSharingIntent streams prevent settling in tests
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
     // Verify we're on the inbox screen (which is the default authenticated route)
     expect(find.text('Inbox'), findsWidgets);

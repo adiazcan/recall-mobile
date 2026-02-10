@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/providers.dart';
+import '../../models/collection.dart';
 import '../../models/item.dart';
 import '../../models/tag.dart';
 import '../shared/error_view.dart';
