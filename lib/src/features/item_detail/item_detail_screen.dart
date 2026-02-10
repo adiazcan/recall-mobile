@@ -195,7 +195,6 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         );
       }
     }
-    }
   }
 
   Future<void> _deleteItem() async {
