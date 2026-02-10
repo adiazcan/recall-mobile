@@ -16,6 +16,10 @@ dependencies:
   shared_preferences: ^2.5.3
   collection: ^1.19.1
   cupertino_icons: ^1.0.8
+  msal_flutter: ^2.0.1
+  receive_sharing_intent: ^1.8.1
+  cached_network_image: ^3.4.1
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

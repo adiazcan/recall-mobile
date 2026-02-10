@@ -17,13 +17,13 @@
 
 **Purpose**: Add new dependencies and create shared models/utilities needed across multiple user stories
 
-- [ ] T001 Add new dependencies to pubspec.yaml: msal_flutter, receive_sharing_intent, cached_network_image, url_launcher
-- [ ] T002 [P] Create Item model with ItemStatus enum and JSON serialization in lib/src/models/item.dart
-- [ ] T003 [P] Create Collection model with JSON serialization in lib/src/models/collection.dart
-- [ ] T004 [P] Create Tag model with JSON serialization in lib/src/models/tag.dart
-- [ ] T005 [P] Create PaginatedResponse generic wrapper with JSON parsing in lib/src/models/paginated_response.dart
-- [ ] T006 [P] Create reusable ErrorView widget with retry callback in lib/src/features/shared/error_view.dart
-- [ ] T007 [P] Create reusable EmptyState widget in lib/src/features/shared/empty_state.dart
+- [X] T001 Add new dependencies to pubspec.yaml: msal_flutter, receive_sharing_intent, cached_network_image, url_launcher
+- [X] T002 [P] Create Item model with ItemStatus enum and JSON serialization in lib/src/models/item.dart
+- [X] T003 [P] Create Collection model with JSON serialization in lib/src/models/collection.dart
+- [X] T004 [P] Create Tag model with JSON serialization in lib/src/models/tag.dart
+- [X] T005 [P] Create PaginatedResponse generic wrapper with JSON parsing in lib/src/models/paginated_response.dart
+- [X] T006 [P] Create reusable ErrorView widget with retry callback in lib/src/features/shared/error_view.dart
+- [X] T007 [P] Create reusable EmptyState widget in lib/src/features/shared/empty_state.dart
 
 ---
 
