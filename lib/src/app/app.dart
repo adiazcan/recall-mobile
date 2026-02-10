@@ -32,28 +32,29 @@ class _RecallAppState extends ConsumerState<RecallApp> {
 
   void _initSharingIntent() {
     // Handle shared URLs when app is already running (warm start)
-    _intentDataStreamSubscription =
-        ReceiveSharingIntent.instance.getMediaStream().listen(
-      (List<SharedMediaFile> value) {
-        if (value.isNotEmpty) {
-          // Some apps share URLs as media files
-          for (var media in value) {
-            if (media.path.startsWith('http')) {
-              _handleSharedUrl(media.path);
-              break;
+    _intentDataStreamSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen(
+          (List<SharedMediaFile> value) {
+            if (value.isNotEmpty) {
+              // Some apps share URLs as media files
+              for (var media in value) {
+                if (media.path.startsWith('http')) {
+                  _handleSharedUrl(media.path);
+                  break;
+                }
+              }
             }
-          }
-        }
-      },
-      onError: (err) {
-        debugPrint('Error receiving shared media: $err');
-      },
-    );
+          },
+          onError: (err) {
+            debugPrint('Error receiving shared media: $err');
+          },
+        );
 
     // Handle shared URLs when app starts from share action (cold start)
-    ReceiveSharingIntent.instance
-        .getInitialMedia()
-        .then((List<SharedMediaFile> value) {
+    ReceiveSharingIntent.instance.getInitialMedia().then((
+      List<SharedMediaFile> value,
+    ) {
       if (value.isNotEmpty) {
         for (var media in value) {
           if (media.path.startsWith('http')) {
