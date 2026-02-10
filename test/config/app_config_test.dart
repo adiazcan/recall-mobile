@@ -9,12 +9,20 @@ void main() {
         defaultApiBaseUrl: 'https://example.dev',
         defaultOpenApiSpecUrl: 'https://example.dev/openapi/v1.json',
         defaultLogHttp: true,
+        defaultEntraClientId: 'test-client-id',
+        defaultEntraTenantId: 'test-tenant-id',
+        defaultEntraScopes: 'api://test/scope',
+        defaultEntraRedirectUri: 'msauth://com.recall.mobile/callback',
       );
 
       expect(config.env, AppEnvironment.dev);
       expect(config.apiBaseUrl, 'https://example.dev');
       expect(config.openApiSpecUrl, 'https://example.dev/openapi/v1.json');
       expect(config.logHttp, true);
+      expect(config.entraClientId, 'test-client-id');
+      expect(config.entraTenantId, 'test-tenant-id');
+      expect(config.entraScopes, 'api://test/scope');
+      expect(config.entraRedirectUri, 'msauth://com.recall.mobile/callback');
     });
 
     test('requires staging URL defines when no defaults are provided', () {

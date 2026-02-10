@@ -1,18 +1,94 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
-import 'router.dart';
+import 'providers.dart';
 
-class RecallApp extends StatelessWidget {
+class RecallApp extends ConsumerStatefulWidget {
   const RecallApp({super.key, this.configError});
 
   final String? configError;
 
   @override
+  ConsumerState<RecallApp> createState() => _RecallAppState();
+}
+
+class _RecallAppState extends ConsumerState<RecallApp> {
+  StreamSubscription? _intentMediaStreamSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSharingIntent();
+  }
+
+  @override
+  void dispose() {
+    _intentMediaStreamSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _initSharingIntent() {
+    // Handle shared URLs when app is already running (warm start)
+    _intentMediaStreamSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen(
+          (List<SharedMediaFile> value) {
+            if (value.isNotEmpty) {
+              // Handle URLs and text shared from other apps
+              for (var media in value) {
+                if (media.type == SharedMediaType.url ||
+                    media.type == SharedMediaType.text ||
+                    media.path.startsWith('http')) {
+                  _handleSharedUrl(media.path);
+                  ReceiveSharingIntent.instance.reset();
+                  break;
+                }
+              }
+            }
+          },
+          onError: (err) {
+            debugPrint('Error receiving shared media: $err');
+          },
+        );
+
+    // Handle shared URLs when app starts from share action (cold start)
+    ReceiveSharingIntent.instance.getInitialMedia().then((
+      List<SharedMediaFile> value,
+    ) {
+      if (value.isNotEmpty) {
+        for (var media in value) {
+          if (media.type == SharedMediaType.url ||
+              media.type == SharedMediaType.text ||
+              media.path.startsWith('http')) {
+            _handleSharedUrl(media.path);
+            ReceiveSharingIntent.instance.reset();
+            break;
+          }
+        }
+      }
+    });
+  }
+
+  void _handleSharedUrl(String sharedText) {
+    // Extract URL from shared text (some apps share URLs with additional context)
+    final urlPattern = RegExp(r'https?://[^\s]+');
+    final match = urlPattern.firstMatch(sharedText);
+    final url = match?.group(0) ?? sharedText.trim();
+
+    // Store the shared URL in a provider so it can be picked up by the router
+    // We'll create a sharedUrlProvider to handle this
+    ref.read(sharedUrlProvider.notifier).setSharedUrl(url);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (configError != null) {
+    if (widget.configError != null) {
       return MaterialApp(
         title: 'Recall',
-        home: MissingConfigScreen(message: configError!),
+        home: MissingConfigScreen(message: widget.configError!),
       );
     }
 
@@ -21,7 +97,7 @@ class RecallApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      routerConfig: createRouter(),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }

@@ -1,11 +1,19 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:recall/src/app/app.dart';
 import 'package:recall/src/app/providers.dart';
+import 'package:recall/src/auth/auth_state.dart';
 import 'package:recall/src/config/app_config.dart';
 import 'package:recall/src/openapi/openapi_repository.dart';
+
+// Mock AuthStateNotifier that returns authenticated state
+class MockAuthStateNotifier extends AuthStateNotifier {
+  @override
+  Future<AuthState> build() async {
+    return const AuthState(status: AuthStatus.authenticated);
+  }
+}
 
 class DelayedOpenApiRepository extends OpenApiRepository {
   DelayedOpenApiRepository()
@@ -16,6 +24,10 @@ class DelayedOpenApiRepository extends OpenApiRepository {
           apiBaseUrl: 'https://example.dev',
           openApiSpecUrl: 'https://example.dev/openapi/v1.json',
           logHttp: true,
+          entraClientId: 'test-client-id',
+          entraTenantId: 'test-tenant-id',
+          entraScopes: 'api://test/scope',
+          entraRedirectUri: 'msauth://com.recall.mobile/callback',
         ),
       );
 
@@ -35,18 +47,25 @@ class DelayedOpenApiRepository extends OpenApiRepository {
 }
 
 void main() {
-  testWidgets('app launches and shows loading on fetch', (tester) async {
+  testWidgets('app launches and shows inbox when authenticated', (
+    tester,
+  ) async {
     final config = AppConfig(
       env: AppEnvironment.dev,
       apiBaseUrl: 'https://example.dev',
       openApiSpecUrl: 'https://example.dev/openapi/v1.json',
       logHttp: true,
+      entraClientId: 'test-client-id',
+      entraTenantId: 'test-tenant-id',
+      entraScopes: 'api://test/scope',
+      entraRedirectUri: 'msauth://com.recall.mobile/callback',
     );
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appConfigProvider.overrideWithValue(config),
+          authStateProvider.overrideWith(() => MockAuthStateNotifier()),
           openApiRepositoryProvider.overrideWithValue(
             DelayedOpenApiRepository(),
           ),
@@ -55,14 +74,17 @@ void main() {
       ),
     );
 
-    expect(find.text('Fetch OpenAPI spec'), findsOneWidget);
-
-    await tester.tap(find.text('Fetch OpenAPI spec'));
+    // Wait for initial route to load
+    // Note: Using pump() instead of pumpAndSettle() because
+    // ReceiveSharingIntent streams prevent settling in tests
     await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    // Verify we're on the inbox screen (which is the default authenticated route)
+    expect(find.text('Inbox'), findsWidgets);
+
+    // Verify bottom navigation is present
+    expect(find.text('Collections'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
   });
 }

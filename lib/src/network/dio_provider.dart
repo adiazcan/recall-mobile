@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
 
+import '../auth/auth_service.dart';
 import '../auth/token_store.dart';
 import '../config/app_config.dart';
 
 Dio buildDioClient({
   required AppConfig config,
   required TokenStore tokenStore,
+  required AuthService authService,
 }) {
   final dio = Dio(
     BaseOptions(
@@ -21,31 +23,7 @@ Dio buildDioClient({
   );
 
   dio.interceptors.add(
-    InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final tokens = await tokenStore.readTokens();
-        if (tokens != null && tokens.accessToken.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer ${tokens.accessToken}';
-        }
-        handler.next(options);
-      },
-      onError: (error, handler) {
-        if (error.response?.statusCode == 401) {
-          handler.reject(
-            DioException(
-              requestOptions: error.requestOptions,
-              response: error.response,
-              type: DioExceptionType.badResponse,
-              error:
-                  'Unauthorized (401). Token refresh flow is not configured yet.',
-            ),
-          );
-          return;
-        }
-
-        handler.next(error);
-      },
-    ),
+    AuthInterceptor(tokenStore: tokenStore, authService: authService, dio: dio),
   );
 
   if (config.logHttp) {
@@ -55,4 +33,60 @@ Dio buildDioClient({
   }
 
   return dio;
+}
+
+class AuthInterceptor extends QueuedInterceptor {
+  AuthInterceptor({
+    required this.tokenStore,
+    required this.authService,
+    required this.dio,
+  });
+
+  final TokenStore tokenStore;
+  final AuthService authService;
+  final Dio dio;
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final token = await tokenStore.getToken();
+    if (token != null && token.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+
+  @override
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (err.response?.statusCode == 401) {
+      // Check if we've already tried to refresh for this request
+      final hasRetried =
+          err.requestOptions.extra['auth_retry_attempted'] == true;
+
+      if (!hasRetried) {
+        try {
+          final newToken = await authService.acquireTokenSilent();
+
+          if (newToken != null) {
+            err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+            // Mark this request as having attempted a refresh
+            err.requestOptions.extra['auth_retry_attempted'] = true;
+
+            final response = await dio.fetch(err.requestOptions);
+            handler.resolve(response);
+            return;
+          }
+        } catch (_) {
+          // Silent refresh failed, let the error propagate
+        }
+      }
+    }
+
+    handler.next(err);
+  }
 }

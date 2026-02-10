@@ -22,6 +22,18 @@ abstract class TokenStore {
   Future<Tokens?> readTokens();
 
   Future<void> clear();
+
+  Future<String?> getToken() {
+    return readTokens().then((tokens) => tokens?.accessToken);
+  }
+
+  Future<void> saveToken(String accessToken) {
+    return setTokens(accessToken: accessToken, refreshToken: '');
+  }
+
+  Future<void> deleteToken() {
+    return clear();
+  }
 }
 
 class SecureTokenStore implements TokenStore {
@@ -71,6 +83,22 @@ class SecureTokenStore implements TokenStore {
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _expiresAtKey);
   }
+
+  @override
+  Future<String?> getToken() async {
+    final tokens = await readTokens();
+    return tokens?.accessToken;
+  }
+
+  @override
+  Future<void> saveToken(String accessToken) async {
+    await setTokens(accessToken: accessToken, refreshToken: '');
+  }
+
+  @override
+  Future<void> deleteToken() async {
+    await clear();
+  }
 }
 
 class InMemoryTokenStore implements TokenStore {
@@ -95,5 +123,20 @@ class InMemoryTokenStore implements TokenStore {
       refreshToken: refreshToken,
       expiresAt: expiresAt,
     );
+  }
+
+  @override
+  Future<String?> getToken() async {
+    return _tokens?.accessToken;
+  }
+
+  @override
+  Future<void> saveToken(String accessToken) async {
+    await setTokens(accessToken: accessToken, refreshToken: '');
+  }
+
+  @override
+  Future<void> deleteToken() async {
+    await clear();
   }
 }
