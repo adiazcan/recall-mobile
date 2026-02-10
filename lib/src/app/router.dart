@@ -64,8 +64,10 @@ GoRouter createRouter(Ref ref) {
         // Clear the pending URL and navigate to save screen (side effect)
         // TODO: Move this mutation to a listener for purity
         ref.read(authStateProvider.notifier).clearPendingSharedUrl();
-        return Uri(path: '/save', queryParameters: {'url': pendingSharedUrl})
-            .toString();
+        return Uri(
+          path: '/save',
+          queryParameters: {'url': pendingSharedUrl},
+        ).toString();
       }
 
       // Standard auth redirect logic

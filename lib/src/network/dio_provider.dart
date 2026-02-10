@@ -65,8 +65,9 @@ class AuthInterceptor extends QueuedInterceptor {
   ) async {
     if (err.response?.statusCode == 401) {
       // Check if we've already tried to refresh for this request
-      final hasRetried = err.requestOptions.extra['auth_retry_attempted'] == true;
-      
+      final hasRetried =
+          err.requestOptions.extra['auth_retry_attempted'] == true;
+
       if (!hasRetried) {
         try {
           final newToken = await authService.acquireTokenSilent();
