@@ -50,3 +50,10 @@ fvm flutter test test/config/app_config_test.dart
 - Place tests mirroring `lib/src/` structure under `test/`.
 - No codegen (build_runner, freezed, json_serializable) — manual JSON parsing and const constructors.
 - Keep staging/prod configuration strict; never add implicit placeholder URLs.
+
+## Active Technologies
+- Dart 3.10.8+ / Flutter stable (pinned via FVM) + flutter_riverpod 2.6.1, go_router 16.2.1, dio 5.9.0, flutter_secure_storage 9.2.4 (existing); adding: msal_flutter (Entra ID auth), receive_sharing_intent or share_handler (share sheet), cached_network_image (image thumbnails) (001-recall-mobile-mvp)
+- Flutter Secure Storage (tokens), SharedPreferences (local cache for items/collections/tags JSON) (001-recall-mobile-mvp)
+
+## Recent Changes
+- 001-recall-mobile-mvp: Added Dart 3.10.8+ / Flutter stable (pinned via FVM) + flutter_riverpod 2.6.1, go_router 16.2.1, dio 5.9.0, flutter_secure_storage 9.2.4 (existing); adding: msal_flutter (Entra ID auth), receive_sharing_intent or share_handler (share sheet), cached_network_image (image thumbnails)
