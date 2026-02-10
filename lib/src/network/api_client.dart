@@ -22,11 +22,11 @@ class ApiClient {
   }) async {
     final queryParams = <String, dynamic>{
       'limit': limit.toString(),
-      if (cursor != null) 'cursor': cursor,
-      if (status != null) 'status': status,
+      if (cursor?.isNotEmpty ?? false) 'cursor': cursor,
+      if (status?.isNotEmpty ?? false) 'status': status,
       if (isFavorite != null) 'is_favorite': isFavorite.toString(),
-      if (collectionId != null) 'collection_id': collectionId,
-      if (tagIds != null && tagIds.isNotEmpty) 'tag_ids': tagIds.join(','),
+      if (collectionId?.isNotEmpty ?? false) 'collection_id': collectionId,
+      if (tagIds?.isNotEmpty ?? false) 'tag_ids': tagIds!.join(','),
     };
 
     final response = await dio.get(
@@ -55,8 +55,8 @@ class ApiClient {
       '/api/v1/items',
       data: {
         'url': url,
-        if (collectionId != null) 'collection_id': collectionId,
-        if (tagIds != null && tagIds.isNotEmpty) 'tag_ids': tagIds,
+        if (collectionId?.isNotEmpty ?? false) 'collection_id': collectionId,
+        if (tagIds?.isNotEmpty ?? false) 'tag_ids': tagIds,
       },
     );
 

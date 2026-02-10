@@ -144,7 +144,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     final collections = collectionsAsync.when(
       data: (data) => data,
       loading: () => null,
-      error: (_, __) => null,
+      error: (_, _) => null,
     );
 
     if (collections == null || !mounted) return;
@@ -538,10 +538,13 @@ class CollectionPickerDialog extends ConsumerWidget {
             // Inbox option
             ListTile(
               title: const Text('Inbox'),
+              // ignore: deprecated_member_use
               leading: Radio<String?>(
                 value: '',
+                // ignore: deprecated_member_use
                 groupValue: currentCollectionId,
-                onChanged: (_) {},
+                // ignore: deprecated_member_use
+                onChanged: null,
               ),
               onTap: () => Navigator.of(context).pop(''),
             ),
@@ -551,10 +554,13 @@ class CollectionPickerDialog extends ConsumerWidget {
               final id = collection.id as String;
               return ListTile(
                 title: Text(collection.name as String),
+                // ignore: deprecated_member_use
                 leading: Radio<String?>(
                   value: id,
+                  // ignore: deprecated_member_use
                   groupValue: currentCollectionId,
-                  onChanged: (_) {},
+                  // ignore: deprecated_member_use
+                  onChanged: null,
                 ),
                 onTap: () => Navigator.of(context).pop(id),
               );
