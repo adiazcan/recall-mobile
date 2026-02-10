@@ -139,25 +139,21 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 
   Future<void> _moveToCollection(Item item) async {
-    final collectionsAsync = ref.read(collectionsProvider);
+    try {
+      final collections = await ref.read(collectionsProvider.future);
 
-    final collections = collectionsAsync.when(
-      data: (data) => data,
-      loading: () => null,
-      error: (_, _) => null,
-    );
+      if (!mounted) return;
 
-    if (collections == null || !mounted) return;
+      final selectedCollectionId = await showDialog<String?>(
+        context: context,
+        builder: (context) => CollectionPickerDialog(
+          collections: collections,
+          currentCollectionId: item.collectionId,
+        ),
+      );
 
-    final selectedCollectionId = await showDialog<String?>(
-      context: context,
-      builder: (context) => CollectionPickerDialog(
-        collections: collections,
-        currentCollectionId: item.collectionId,
-      ),
-    );
+      if (selectedCollectionId == null && !mounted) return;
 
-    if (selectedCollectionId != null && mounted) {
       setState(() => _isUpdating = true);
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
@@ -167,7 +163,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                selectedCollectionId.isEmpty
+                selectedCollectionId == null
                     ? 'Moved to inbox'
                     : 'Moved to collection',
               ),
@@ -187,6 +183,16 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         if (mounted) {
           setState(() => _isUpdating = false);
         }
+      }
+    } catch (e) {
+      // Error loading collections
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load collections: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
       }
     }
   }
@@ -523,7 +529,7 @@ class CollectionPickerDialog extends ConsumerWidget {
     required this.currentCollectionId,
   });
 
-  final List collections;
+  final List<Collection> collections;
   final String? currentCollectionId;
 
   @override
@@ -540,29 +546,28 @@ class CollectionPickerDialog extends ConsumerWidget {
               title: const Text('Inbox'),
               // ignore: deprecated_member_use
               leading: Radio<String?>(
-                value: '',
+                value: null,
                 // ignore: deprecated_member_use
                 groupValue: currentCollectionId,
                 // ignore: deprecated_member_use
                 onChanged: null,
               ),
-              onTap: () => Navigator.of(context).pop(''),
+              onTap: () => Navigator.of(context).pop(null),
             ),
             const Divider(),
             // Collections
             ...collections.map((collection) {
-              final id = collection.id as String;
               return ListTile(
-                title: Text(collection.name as String),
+                title: Text(collection.name),
                 // ignore: deprecated_member_use
                 leading: Radio<String?>(
-                  value: id,
+                  value: collection.id,
                   // ignore: deprecated_member_use
                   groupValue: currentCollectionId,
                   // ignore: deprecated_member_use
                   onChanged: null,
                 ),
-                onTap: () => Navigator.of(context).pop(id),
+                onTap: () => Navigator.of(context).pop(collection.id),
               );
             }),
           ],

@@ -78,7 +78,7 @@ class InboxState {
 class InboxNotifier extends AsyncNotifier<InboxState> {
   @override
   Future<InboxState> build() async {
-    final cacheService = ref.read(cacheServiceProvider);
+    final cacheService = await ref.read(cacheServiceProvider.future);
     final cachedItemsJson = cacheService.getCachedItems();
 
     // Start with cached items if available (stale-while-revalidate)
@@ -104,7 +104,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
   // Fetch items from API with current filters
   Future<void> _fetchItems({bool resetList = false}) async {
     final apiClient = ref.read(apiClientProvider);
-    final cacheService = ref.read(cacheServiceProvider);
+    final cacheService = await ref.read(cacheServiceProvider.future);
 
     final currentState = state.valueOrNull;
     if (currentState == null) return;

@@ -54,9 +54,11 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
       return 'Please enter a URL';
     }
 
-    final urlPattern = RegExp(r'^https?://.+\..+', caseSensitive: false);
-
-    if (!urlPattern.hasMatch(value.trim())) {
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null ||
+        !uri.hasScheme ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        !uri.hasAuthority) {
       return 'Please enter a valid URL (e.g., https://example.com)';
     }
 
@@ -248,8 +250,11 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
                           const SizedBox(height: 8),
                           TextButton.icon(
                             onPressed: () {
-                              context.pop();
-                              context.push('/item/$_duplicateItemId');
+                              final itemId = _duplicateItemId;
+                              Navigator.of(context).pop();
+                              if (itemId != null) {
+                                context.push('/item/$itemId');
+                              }
                             },
                             icon: const Icon(Icons.open_in_new),
                             label: const Text('View existing item'),

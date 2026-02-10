@@ -24,9 +24,9 @@ class ApiClient {
       'limit': limit.toString(),
       if (cursor?.isNotEmpty ?? false) 'cursor': cursor,
       if (status?.isNotEmpty ?? false) 'status': status,
-      if (isFavorite != null) 'is_favorite': isFavorite.toString(),
-      if (collectionId?.isNotEmpty ?? false) 'collection_id': collectionId,
-      if (tagIds?.isNotEmpty ?? false) 'tag_ids': tagIds!.join(','),
+      if (isFavorite != null) 'favorite': isFavorite.toString(),
+      if (collectionId?.isNotEmpty ?? false) 'collectionId': collectionId,
+      if (tagIds?.isNotEmpty ?? false) 'tags': tagIds!.join(','),
     };
 
     final response = await dio.get(
@@ -55,8 +55,8 @@ class ApiClient {
       '/api/v1/items',
       data: {
         'url': url,
-        if (collectionId?.isNotEmpty ?? false) 'collection_id': collectionId,
-        if (tagIds?.isNotEmpty ?? false) 'tag_ids': tagIds,
+        if (collectionId?.isNotEmpty ?? false) 'collectionId': collectionId,
+        if (tagIds?.isNotEmpty ?? false) 'tagIds': tagIds,
       },
     );
 
@@ -72,9 +72,9 @@ class ApiClient {
   }) async {
     final data = <String, dynamic>{};
     if (status != null) data['status'] = status;
-    if (isFavorite != null) data['is_favorite'] = isFavorite;
-    if (collectionId != null) data['collection_id'] = collectionId;
-    if (tagIds != null) data['tag_ids'] = tagIds;
+    if (isFavorite != null) data['isFavorite'] = isFavorite;
+    if (collectionId != null) data['collectionId'] = collectionId;
+    if (tagIds != null) data['tagIds'] = tagIds;
 
     final response = await dio.patch('/api/v1/items/$id', data: data);
     return Item.fromJson(response.data as Map<String, dynamic>);
@@ -88,8 +88,9 @@ class ApiClient {
 
   Future<List<Collection>> getCollections() async {
     final response = await dio.get('/api/v1/collections');
-    final data = response.data as List<dynamic>;
-    return data
+    final data = response.data as Map<String, dynamic>;
+    final collections = data['collections'] as List<dynamic>;
+    return collections
         .map((json) => Collection.fromJson(json as Map<String, dynamic>))
         .toList();
   }
@@ -123,8 +124,9 @@ class ApiClient {
 
   Future<List<Tag>> getTags() async {
     final response = await dio.get('/api/v1/tags');
-    final data = response.data as List<dynamic>;
-    return data
+    final data = response.data as Map<String, dynamic>;
+    final tags = data['tags'] as List<dynamic>;
+    return tags
         .map((json) => Tag.fromJson(json as Map<String, dynamic>))
         .toList();
   }
