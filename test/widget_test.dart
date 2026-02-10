@@ -13,10 +13,7 @@ import 'package:recall/src/openapi/openapi_repository.dart';
 // Mock AuthStateNotifier that returns authenticated state
 class MockAuthStateNotifier extends AuthStateNotifier {
   MockAuthStateNotifier()
-      : super(
-          authService: _MockAuthService(),
-          tokenStore: _MockTokenStore(),
-        );
+    : super(authService: _MockAuthService(), tokenStore: _MockTokenStore());
 
   @override
   Future<AuthState> build() async {
@@ -112,8 +109,9 @@ class DelayedOpenApiRepository extends OpenApiRepository {
 }
 
 void main() {
-  testWidgets('app launches and shows inbox when authenticated',
-      (tester) async {
+  testWidgets('app launches and shows inbox when authenticated', (
+    tester,
+  ) async {
     final config = AppConfig(
       env: AppEnvironment.dev,
       apiBaseUrl: 'https://example.dev',
