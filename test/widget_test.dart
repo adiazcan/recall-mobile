@@ -16,6 +16,10 @@ class DelayedOpenApiRepository extends OpenApiRepository {
           apiBaseUrl: 'https://example.dev',
           openApiSpecUrl: 'https://example.dev/openapi/v1.json',
           logHttp: true,
+          entraClientId: 'test-client-id',
+          entraTenantId: 'test-tenant-id',
+          entraScopes: 'api://test/scope',
+          entraRedirectUri: 'msauth://com.recall.mobile/callback',
         ),
       );
 
@@ -41,6 +45,10 @@ void main() {
       apiBaseUrl: 'https://example.dev',
       openApiSpecUrl: 'https://example.dev/openapi/v1.json',
       logHttp: true,
+      entraClientId: 'test-client-id',
+      entraTenantId: 'test-tenant-id',
+      entraScopes: 'api://test/scope',
+      entraRedirectUri: 'msauth://com.recall.mobile/callback',
     );
 
     await tester.pumpWidget(

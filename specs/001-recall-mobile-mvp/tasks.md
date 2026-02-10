@@ -33,20 +33,20 @@
 
 **Warning**: No user story work can begin until this phase is complete
 
-- [ ] T008 Extend AppConfig with Entra ID fields (entraClientId, entraTenantId, entraScopes, entraRedirectUri) and update fromDartDefines() in lib/src/config/app_config.dart
-- [ ] T009 Update main_dev.dart, main_staging.dart, main_prod.dart to pass new Entra ID dart-define defaults/requirements
-- [ ] T010 Create AuthService class wrapping msal_flutter with signIn(), signOut(), refreshToken(), and acquireTokenSilent() in lib/src/auth/auth_service.dart
-- [ ] T011 Create AuthState notifier (unauthenticated/loading/authenticated) as Riverpod AsyncNotifier in lib/src/auth/auth_state.dart
-- [ ] T012 Register authServiceProvider and authStateProvider in lib/src/app/providers.dart
-- [ ] T013 Update Dio interceptor in lib/src/network/dio_provider.dart to implement QueuedInterceptor with silent token refresh on 401 and retry
-- [ ] T014 Create typed ApiClient class wrapping Dio with methods for all /api/v1 endpoints (items CRUD, collections CRUD, tags list/create) in lib/src/network/api_client.dart
-- [ ] T015 Register apiClientProvider in lib/src/app/providers.dart
-- [ ] T016 Create CacheService using SharedPreferences for stale-while-revalidate caching of items, collections, and tags JSON in lib/src/cache/cache_service.dart
-- [ ] T017 Register cacheServiceProvider in lib/src/app/providers.dart
-- [ ] T018 Update GoRouter in lib/src/app/router.dart: add auth redirect guard (unauthenticated → /onboarding, authenticated → /inbox), add refreshListenable watching authState, add new routes (/onboarding, /inbox, /item/:id, /save, /collections, /settings)
-- [ ] T019 Update HomeScreen in lib/src/features/home/home_screen.dart: replace API/Settings tabs with Inbox/Collections/Settings tabs and add FAB for save URL action
-- [ ] T020 Update iOS Info.plist in ios/Runner/Info.plist: add URL scheme for MSAL redirect (msauth)
-- [ ] T021 Update Android AndroidManifest.xml in android/app/src/main/AndroidManifest.xml: add MSAL redirect activity and URL share intent filter
+- [X] T008 Extend AppConfig with Entra ID fields (entraClientId, entraTenantId, entraScopes, entraRedirectUri) and update fromDartDefines() in lib/src/config/app_config.dart
+- [X] T009 Update main_dev.dart, main_staging.dart, main_prod.dart to pass new Entra ID dart-define defaults/requirements
+- [X] T010 Create AuthService class wrapping msal_flutter with signIn(), signOut(), refreshToken(), and acquireTokenSilent() in lib/src/auth/auth_service.dart
+- [X] T011 Create AuthState notifier (unauthenticated/loading/authenticated) as Riverpod AsyncNotifier in lib/src/auth/auth_state.dart
+- [X] T012 Register authServiceProvider and authStateProvider in lib/src/app/providers.dart
+- [X] T013 Update Dio interceptor in lib/src/network/dio_provider.dart to implement QueuedInterceptor with silent token refresh on 401 and retry
+- [X] T014 Create typed ApiClient class wrapping Dio with methods for all /api/v1 endpoints (items CRUD, collections CRUD, tags list/create) in lib/src/network/api_client.dart
+- [X] T015 Register apiClientProvider in lib/src/app/providers.dart
+- [X] T016 Create CacheService using SharedPreferences for stale-while-revalidate caching of items, collections, and tags JSON in lib/src/cache/cache_service.dart
+- [X] T017 Register cacheServiceProvider in lib/src/app/providers.dart
+- [X] T018 Update GoRouter in lib/src/app/router.dart: add auth redirect guard (unauthenticated → /onboarding, authenticated → /inbox), add refreshListenable watching authState, add new routes (/onboarding, /inbox, /item/:id, /save, /collections, /settings)
+- [X] T019 Update HomeScreen in lib/src/features/home/home_screen.dart: replace API/Settings tabs with Inbox/Collections/Settings tabs and add FAB for save URL action
+- [X] T020 Update iOS Info.plist in ios/Runner/Info.plist: add URL scheme for MSAL redirect (msauth)
+- [X] T021 Update Android AndroidManifest.xml in android/app/src/main/AndroidManifest.xml: add MSAL redirect activity and URL share intent filter
 
 **Checkpoint**: Foundation ready — auth, API client, cache, routing, and platform config in place. User story implementation can now begin.
 
@@ -60,10 +60,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T022 [US1] Create OnboardingScreen with Entra ID sign-in button that triggers authService.signIn() in lib/src/features/onboarding/onboarding_screen.dart
-- [ ] T023 [US1] Update SettingsScreen to add sign-out button that calls authService.signOut() and clears tokens in lib/src/features/settings/settings_screen.dart
-- [ ] T024 [US1] Wire OnboardingScreen into router at /onboarding route in lib/src/app/router.dart
-- [ ] T025 [US1] Verify auth redirect guard: unauthenticated users → /onboarding, authenticated users → /inbox, sign-out → /onboarding
+- [X] T022 [US1] Create OnboardingScreen with Entra ID sign-in button that triggers authService.signIn() in lib/src/features/onboarding/onboarding_screen.dart
+- [X] T023 [US1] Update SettingsScreen to add sign-out button that calls authService.signOut() and clears tokens in lib/src/features/settings/settings_screen.dart
+- [X] T024 [US1] Wire OnboardingScreen into router at /onboarding route in lib/src/app/router.dart
+- [X] T025 [US1] Verify auth redirect guard: unauthenticated users → /onboarding, authenticated users → /inbox, sign-out → /onboarding
 
 **Checkpoint**: User Story 1 is fully functional — users can sign in, persist session, and sign out.
 
@@ -77,11 +77,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [P] [US2] Create InboxProviders with AsyncNotifier managing items list state, active filters, pagination cursor, and hasMore flag in lib/src/features/inbox/inbox_providers.dart
-- [ ] T027 [P] [US2] Create ItemCard widget displaying title, domain, excerpt, CachedNetworkImage thumbnail, favorite icon, and status indicator in lib/src/features/inbox/item_card.dart
-- [ ] T028 [US2] Create InboxScreen with ListView.builder, scroll controller for infinite scroll, filter bar (status/favorites/collection/tags dropdowns), and empty state in lib/src/features/inbox/inbox_screen.dart
-- [ ] T029 [US2] Wire InboxScreen into router at /inbox route and set as initial authenticated route in lib/src/app/router.dart
-- [ ] T030 [US2] Integrate CacheService into inbox providers: load cached items on startup, update cache on each successful fetch in lib/src/features/inbox/inbox_providers.dart
+- [X] T026 [P] [US2] Create InboxProviders with AsyncNotifier managing items list state, active filters, pagination cursor, and hasMore flag in lib/src/features/inbox/inbox_providers.dart
+- [X] T027 [P] [US2] Create ItemCard widget displaying title, domain, excerpt, CachedNetworkImage thumbnail, favorite icon, and status indicator in lib/src/features/inbox/item_card.dart
+- [X] T028 [US2] Create InboxScreen with ListView.builder, scroll controller for infinite scroll, filter bar (status/favorites/collection/tags dropdowns), and empty state in lib/src/features/inbox/inbox_screen.dart
+- [X] T029 [US2] Wire InboxScreen into router at /inbox route and set as initial authenticated route in lib/src/app/router.dart
+- [X] T030 [US2] Integrate CacheService into inbox providers: load cached items on startup, update cache on each successful fetch in lib/src/features/inbox/inbox_providers.dart
 
 **Checkpoint**: User Story 2 is fully functional — inbox displays items with all filters and infinite scroll working.
 
@@ -95,11 +95,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T031 [P] [US3] Create TagPicker widget with existing tag selection and inline new tag creation in lib/src/features/shared/tag_picker.dart
-- [ ] T032 [P] [US3] Create ItemDetailProviders with single-item state, mutation methods (toggleFavorite, updateStatus, updateTags, moveCollection, delete) calling ApiClient in lib/src/features/item_detail/item_detail_providers.dart
-- [ ] T033 [US3] Create ItemDetailScreen displaying all item fields, open-in-browser via url_launcher, action buttons for favorite/archive/tags/collection/delete with confirmation dialog in lib/src/features/item_detail/item_detail_screen.dart
-- [ ] T034 [US3] Wire ItemDetailScreen into router at /item/:id route with item ID parameter in lib/src/app/router.dart
-- [ ] T035 [US3] Ensure item mutations in detail screen refresh the inbox list state (invalidate inbox provider or update item in-place) in lib/src/features/item_detail/item_detail_providers.dart
+- [X] T031 [P] [US3] Create TagPicker widget with existing tag selection and inline new tag creation in lib/src/features/shared/tag_picker.dart
+- [X] T032 [P] [US3] Create ItemDetailProviders with single-item state, mutation methods (toggleFavorite, updateStatus, updateTags, moveCollection, delete) calling ApiClient in lib/src/features/item_detail/item_detail_providers.dart
+- [X] T033 [US3] Create ItemDetailScreen displaying all item fields, open-in-browser via url_launcher, action buttons for favorite/archive/tags/collection/delete with confirmation dialog in lib/src/features/item_detail/item_detail_screen.dart
+- [X] T034 [US3] Wire ItemDetailScreen into router at /item/:id route with item ID parameter in lib/src/app/router.dart
+- [X] T035 [US3] Ensure item mutations in detail screen refresh the inbox list state (invalidate inbox provider or update item in-place) in lib/src/features/item_detail/item_detail_providers.dart
 
 **Checkpoint**: User Story 3 is fully functional — all item detail actions work and reflect in the inbox.
 
@@ -113,9 +113,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T036 [US4] Create SaveUrlScreen with URL text field, collection picker, TagPicker, save button, URL validation, duplicate handling (409 → show existing item link), and loading/error states in lib/src/features/save_url/save_url_screen.dart
-- [ ] T037 [US4] Wire SaveUrlScreen into router at /save route, triggered from HomeScreen FAB in lib/src/app/router.dart
-- [ ] T038 [US4] After successful save, refresh inbox items list and navigate back to inbox in lib/src/features/save_url/save_url_screen.dart
+- [X] T036 [US4] Create SaveUrlScreen with URL text field, collection picker, TagPicker, save button, URL validation, duplicate handling (409 → show existing item link), and loading/error states in lib/src/features/save_url/save_url_screen.dart
+- [X] T037 [US4] Wire SaveUrlScreen into router at /save route, triggered from HomeScreen FAB in lib/src/app/router.dart
+- [X] T038 [US4] After successful save, refresh inbox items list and navigate back to inbox in lib/src/features/save_url/save_url_screen.dart
 
 **Checkpoint**: User Story 4 is fully functional — in-app URL saving with validation and duplicate detection works.
 
@@ -129,11 +129,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T039 [US5] Create iOS Share Extension target with ShareViewController.swift and Info.plist configured for URL UTType only in ios/ShareExtension/
-- [ ] T040 [US5] Configure receive_sharing_intent plugin: add listener for incoming shared URLs on app startup and foreground resume in lib/src/app/app.dart
-- [ ] T041 [US5] Route shared URL to SaveUrlScreen with pre-filled URL parameter, handling both app-running and cold-start scenarios in lib/src/app/router.dart
-- [ ] T042 [US5] Handle unauthenticated share: store pending shared URL, complete auth flow, then navigate to SaveUrlScreen with preserved URL in lib/src/auth/auth_state.dart
-- [ ] T043 [US5] Update SaveUrlScreen to accept optional pre-filled URL parameter from share intent in lib/src/features/save_url/save_url_screen.dart
+- [X] T039 [US5] Create iOS Share Extension target with ShareViewController.swift and Info.plist configured for URL UTType only in ios/ShareExtension/
+- [X] T040 [US5] Configure receive_sharing_intent plugin: add listener for incoming shared URLs on app startup and foreground resume in lib/src/app/app.dart
+- [X] T041 [US5] Route shared URL to SaveUrlScreen with pre-filled URL parameter, handling both app-running and cold-start scenarios in lib/src/app/router.dart
+- [X] T042 [US5] Handle unauthenticated share: store pending shared URL, complete auth flow, then navigate to SaveUrlScreen with preserved URL in lib/src/auth/auth_state.dart
+- [X] T043 [US5] Update SaveUrlScreen to accept optional pre-filled URL parameter from share intent in lib/src/features/save_url/save_url_screen.dart
 
 **Checkpoint**: User Story 5 is fully functional — share sheet integration works on both iOS and Android.
 

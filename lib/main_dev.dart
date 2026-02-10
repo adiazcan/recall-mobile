@@ -18,6 +18,22 @@ void main() {
     defaultValue:
         'https://aca-recall-api-dev.agreeablecliff-2d868e3f.westeurope.azurecontainerapps.io/openapi/v1.json',
   );
+  const entraClientId = String.fromEnvironment(
+    'ENTRA_CLIENT_ID',
+    defaultValue: 'dev-client-id-placeholder',
+  );
+  const entraTenantId = String.fromEnvironment(
+    'ENTRA_TENANT_ID',
+    defaultValue: 'dev-tenant-id-placeholder',
+  );
+  const entraScopes = String.fromEnvironment(
+    'ENTRA_SCOPES',
+    defaultValue: 'api://recall/Items.ReadWrite',
+  );
+  const entraRedirectUri = String.fromEnvironment(
+    'ENTRA_REDIRECT_URI',
+    defaultValue: 'msauth://com.recall.mobile/callback',
+  );
 
   try {
     final config = AppConfig.fromDartDefines(
@@ -25,6 +41,10 @@ void main() {
       defaultApiBaseUrl: apiBaseUrl,
       defaultOpenApiSpecUrl: openApiSpecUrl,
       defaultLogHttp: true,
+      defaultEntraClientId: entraClientId,
+      defaultEntraTenantId: entraTenantId,
+      defaultEntraScopes: entraScopes,
+      defaultEntraRedirectUri: entraRedirectUri,
     );
 
     runApp(

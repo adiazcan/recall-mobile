@@ -101,12 +101,12 @@ class Item {
       title: title ?? this.title,
       excerpt: excerpt != null ? excerpt() : this.excerpt,
       domain: domain ?? this.domain,
-      previewImageUrl:
-          previewImageUrl != null ? previewImageUrl() : this.previewImageUrl,
+      previewImageUrl: previewImageUrl != null
+          ? previewImageUrl()
+          : this.previewImageUrl,
       status: status ?? this.status,
       isFavorite: isFavorite ?? this.isFavorite,
-      collectionId:
-          collectionId != null ? collectionId() : this.collectionId,
+      collectionId: collectionId != null ? collectionId() : this.collectionId,
       tags: tags ?? this.tags,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
