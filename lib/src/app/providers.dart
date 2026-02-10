@@ -35,9 +35,7 @@ final authServiceProvider = Provider<AuthService>((ref) {
 });
 
 final authStateProvider = AsyncNotifierProvider<AuthStateNotifier, AuthState>(
-  () {
-    throw UnimplementedError('authStateProvider must be overridden');
-  },
+  AuthStateNotifier.new,
 );
 
 final dioProvider = Provider<Dio>((ref) {
@@ -52,15 +50,9 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(dio: ref.watch(dioProvider));
 });
 
-final cacheServiceProvider = Provider<CacheService>((ref) {
-  return CacheService(
-    prefs: ref
-        .watch(sharedPreferencesProvider)
-        .maybeWhen(
-          data: (prefs) => prefs,
-          orElse: () => throw StateError('SharedPreferences not initialized'),
-        ),
-  );
+final cacheServiceProvider = FutureProvider<CacheService>((ref) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  return CacheService(prefs: prefs);
 });
 
 final openApiRepositoryProvider = Provider<OpenApiRepository>((ref) {

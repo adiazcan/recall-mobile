@@ -16,7 +16,8 @@ class RecallApp extends ConsumerStatefulWidget {
 }
 
 class _RecallAppState extends ConsumerState<RecallApp> {
-  StreamSubscription? _intentDataStreamSubscription;
+  StreamSubscription? _intentMediaStreamSubscription;
+  StreamSubscription? _intentTextStreamSubscription;
 
   @override
   void initState() {
@@ -26,13 +27,14 @@ class _RecallAppState extends ConsumerState<RecallApp> {
 
   @override
   void dispose() {
-    _intentDataStreamSubscription?.cancel();
+    _intentMediaStreamSubscription?.cancel();
+    _intentTextStreamSubscription?.cancel();
     super.dispose();
   }
 
   void _initSharingIntent() {
     // Handle shared URLs when app is already running (warm start)
-    _intentDataStreamSubscription = ReceiveSharingIntent.instance
+    _intentMediaStreamSubscription = ReceiveSharingIntent.instance
         .getMediaStream()
         .listen(
           (List<SharedMediaFile> value) {
@@ -41,6 +43,7 @@ class _RecallAppState extends ConsumerState<RecallApp> {
               for (var media in value) {
                 if (media.path.startsWith('http')) {
                   _handleSharedUrl(media.path);
+                  ReceiveSharingIntent.instance.reset();
                   break;
                 }
               }
@@ -48,6 +51,21 @@ class _RecallAppState extends ConsumerState<RecallApp> {
           },
           onError: (err) {
             debugPrint('Error receiving shared media: $err');
+          },
+        );
+
+    // Handle shared text/URLs (most common for URL sharing)
+    _intentTextStreamSubscription = ReceiveSharingIntent.instance
+        .getTextStream()
+        .listen(
+          (String value) {
+            if (value.isNotEmpty) {
+              _handleSharedUrl(value);
+              ReceiveSharingIntent.instance.reset();
+            }
+          },
+          onError: (err) {
+            debugPrint('Error receiving shared text: $err');
           },
         );
 
@@ -59,9 +77,18 @@ class _RecallAppState extends ConsumerState<RecallApp> {
         for (var media in value) {
           if (media.path.startsWith('http')) {
             _handleSharedUrl(media.path);
+            ReceiveSharingIntent.instance.reset();
             break;
           }
         }
+      }
+    });
+
+    // Handle initial shared text (cold start)
+    ReceiveSharingIntent.instance.getInitialText().then((String? value) {
+      if (value != null && value.isNotEmpty) {
+        _handleSharedUrl(value);
+        ReceiveSharingIntent.instance.reset();
       }
     });
   }

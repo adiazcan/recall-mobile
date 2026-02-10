@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/providers.dart';
 import 'auth_service.dart';
 import 'token_store.dart';
 
@@ -30,17 +31,15 @@ class AuthState {
 }
 
 class AuthStateNotifier extends AsyncNotifier<AuthState> {
-  AuthStateNotifier({
-    required AuthService authService,
-    required TokenStore tokenStore,
-  }) : _authService = authService,
-       _tokenStore = tokenStore;
-
-  final AuthService _authService;
-  final TokenStore _tokenStore;
+  late final AuthService _authService;
+  late final TokenStore _tokenStore;
 
   @override
   Future<AuthState> build() async {
+    // Read dependencies from ref
+    _authService = ref.read(authServiceProvider);
+    _tokenStore = ref.read(tokenStoreProvider);
+
     final token = await _tokenStore.getToken();
 
     if (token == null) {

@@ -36,17 +36,19 @@ GoRouter createRouter(Ref ref) {
       // Check for shared URL from external app
       final sharedUrl = ref.read(sharedUrlProvider);
       if (sharedUrl != null && sharedUrl.isNotEmpty) {
-        // Clear the shared URL to prevent repeated navigation
-        ref.read(sharedUrlProvider.notifier).clearSharedUrl();
-
         if (!isAuthenticated) {
-          // Store the shared URL for after authentication
+          // Store the shared URL for after authentication (side effect)
+          // TODO: Move this mutation to a listener for purity
           ref.read(authStateProvider.notifier).setPendingSharedUrl(sharedUrl);
+          ref.read(sharedUrlProvider.notifier).clearSharedUrl();
           return '/onboarding';
         }
 
         // If authenticated, navigate to save screen with the shared URL
         if (!isSaveUrl) {
+          // Clear after deciding to navigate (side effect)
+          // TODO: Move this mutation to a listener for purity
+          ref.read(sharedUrlProvider.notifier).clearSharedUrl();
           return Uri(
             path: '/save',
             queryParameters: {'url': sharedUrl},
@@ -59,13 +61,11 @@ GoRouter createRouter(Ref ref) {
           pendingSharedUrl != null &&
           pendingSharedUrl.isNotEmpty &&
           !isSaveUrl) {
-        // Clear the pending URL and navigate to save screen
-        final url = ref
-            .read(authStateProvider.notifier)
-            .clearPendingSharedUrl();
-        if (url != null) {
-          return Uri(path: '/save', queryParameters: {'url': url}).toString();
-        }
+        // Clear the pending URL and navigate to save screen (side effect)
+        // TODO: Move this mutation to a listener for purity
+        ref.read(authStateProvider.notifier).clearPendingSharedUrl();
+        return Uri(path: '/save', queryParameters: {'url': pendingSharedUrl})
+            .toString();
       }
 
       // Standard auth redirect logic
