@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../app/providers.dart';
 import '../../models/collection.dart';
 import '../../models/item.dart';
 import '../../models/tag.dart';
+import '../collections/collections_providers.dart';
 import '../shared/error_view.dart';
 import '../shared/tag_picker.dart';
 import 'item_detail_providers.dart';
@@ -22,6 +22,7 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
 
 class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   bool _isUpdating = false;
+  _MutationError? _mutationError;
 
   Future<void> _openInBrowser(String url) async {
     final uri = Uri.parse(url);
@@ -40,7 +41,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 
   Future<void> _toggleFavorite(Item item) async {
-    setState(() => _isUpdating = true);
+    setState(() {
+      _isUpdating = true;
+      _mutationError = null;
+    });
     try {
       final notifier = ref.read(itemDetailNotifierProvider.notifier);
       await notifier.toggleFavorite(item.id, item.isFavorite);
@@ -55,14 +59,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update favorite: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      _showMutationError(
+        message: 'Failed to update favorite: $e',
+        onRetry: () => _toggleFavorite(item),
+      );
     } finally {
       if (mounted) {
         setState(() => _isUpdating = false);
@@ -71,7 +71,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 
   Future<void> _toggleArchive(Item item) async {
-    setState(() => _isUpdating = true);
+    setState(() {
+      _isUpdating = true;
+      _mutationError = null;
+    });
     try {
       final notifier = ref.read(itemDetailNotifierProvider.notifier);
       final newStatus = item.status == ItemStatus.unread
@@ -89,14 +92,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update status: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      _showMutationError(
+        message: 'Failed to update status: $e',
+        onRetry: () => _toggleArchive(item),
+      );
     } finally {
       if (mounted) {
         setState(() => _isUpdating = false);
@@ -112,7 +111,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
 
     if (selectedTags != null && mounted) {
-      setState(() => _isUpdating = true);
+      setState(() {
+        _isUpdating = true;
+        _mutationError = null;
+      });
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
         await notifier.updateTags(item.id, selectedTags);
@@ -123,14 +125,18 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ).showSnackBar(const SnackBar(content: Text('Tags updated')));
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to update tags: $e'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        }
+        _showMutationError(
+          message: 'Failed to update tags: $e',
+          onRetry: () async {
+            final notifier = ref.read(itemDetailNotifierProvider.notifier);
+            await notifier.updateTags(item.id, selectedTags);
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Tags updated')));
+            }
+          },
+        );
       } finally {
         if (mounted) {
           setState(() => _isUpdating = false);
@@ -145,6 +151,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
       if (!mounted) return;
 
+      const inboxSentinel = '__inbox__';
       final selectedCollectionId = await showDialog<String?>(
         context: context,
         builder: (context) => CollectionPickerDialog(
@@ -153,18 +160,24 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         ),
       );
 
-      if (selectedCollectionId == null && !mounted) return;
+      if (selectedCollectionId == null) return;
+      final targetCollectionId = selectedCollectionId == inboxSentinel
+          ? null
+          : selectedCollectionId;
 
-      setState(() => _isUpdating = true);
+      setState(() {
+        _isUpdating = true;
+        _mutationError = null;
+      });
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
-        await notifier.moveToCollection(item.id, selectedCollectionId);
+        await notifier.moveToCollection(item.id, targetCollectionId);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                selectedCollectionId == null
+                targetCollectionId == null
                     ? 'Moved to inbox'
                     : 'Moved to collection',
               ),
@@ -172,29 +185,34 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           );
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to move item: $e'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        }
+        _showMutationError(
+          message: 'Failed to move item: $e',
+          onRetry: () async {
+            final notifier = ref.read(itemDetailNotifierProvider.notifier);
+            await notifier.moveToCollection(item.id, targetCollectionId);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    targetCollectionId == null
+                        ? 'Moved to inbox'
+                        : 'Moved to collection',
+                  ),
+                ),
+              );
+            }
+          },
+        );
       } finally {
         if (mounted) {
           setState(() => _isUpdating = false);
         }
       }
     } catch (e) {
-      // Error loading collections
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load collections: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      _showMutationError(
+        message: 'Failed to load collections: $e',
+        onRetry: () => _moveToCollection(item),
+      );
     }
   }
 
@@ -223,7 +241,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() => _isUpdating = true);
+      setState(() {
+        _isUpdating = true;
+        _mutationError = null;
+      });
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
         await notifier.deleteItem(widget.itemId);
@@ -243,9 +264,23 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
+          _showMutationError(
+            message: 'Failed to delete item: $e',
+            onRetry: _deleteItem,
+          );
         }
       }
     }
+  }
+
+  void _showMutationError({
+    required String message,
+    required Future<void> Function() onRetry,
+  }) {
+    if (!mounted) return;
+    setState(() {
+      _mutationError = _MutationError(message: message, onRetry: onRetry);
+    });
   }
 
   @override
@@ -394,6 +429,52 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ),
           const SizedBox(height: 24),
 
+          if (_mutationError != null) ...[
+            ErrorView(
+              message: _mutationError!.message,
+              onRetry: () async {
+                setState(() {
+                  _isUpdating = true;
+                });
+                try {
+                  await _mutationError!.onRetry();
+                  if (mounted) {
+                    setState(() {
+                      _mutationError = null;
+                    });
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    setState(() {
+                      _mutationError = _MutationError(
+                        message: 'Retry failed: $e',
+                        onRetry: _mutationError!.onRetry,
+                      );
+                    });
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _isUpdating = false;
+                    });
+                  }
+                }
+              },
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _mutationError = null;
+                  });
+                },
+                child: const Text('Dismiss'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Action buttons
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -457,6 +538,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
+}
+
+class _MutationError {
+  const _MutationError({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
 }
 
 // Tag edit bottom sheet
@@ -553,7 +641,7 @@ class CollectionPickerDialog extends ConsumerWidget {
                 // ignore: deprecated_member_use
                 onChanged: null,
               ),
-              onTap: () => Navigator.of(context).pop(null),
+              onTap: () => Navigator.of(context).pop('__inbox__'),
             ),
             const Divider(),
             // Collections
@@ -583,9 +671,3 @@ class CollectionPickerDialog extends ConsumerWidget {
     );
   }
 }
-
-// Collections provider (needed for collection picker)
-final collectionsProvider = FutureProvider((ref) async {
-  final apiClient = ref.watch(apiClientProvider);
-  return apiClient.getCollections();
-});

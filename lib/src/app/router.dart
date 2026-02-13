@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/auth_state.dart';
+import '../config/app_config.dart';
 import '../features/api/api_screen.dart';
 import '../features/collections/collections_screen.dart';
 import '../features/home/home_screen.dart';
@@ -14,6 +15,8 @@ import '../features/settings/settings_screen.dart';
 import 'providers.dart';
 
 GoRouter createRouter(Ref ref) {
+  final config = ref.read(appConfigProvider);
+
   return GoRouter(
     initialLocation: '/inbox',
     refreshListenable: GoRouterRefreshStream(ref),
@@ -111,12 +114,14 @@ GoRouter createRouter(Ref ref) {
               return const SettingsScreen();
             },
           ),
-          GoRoute(
-            path: '/api',
-            builder: (BuildContext context, GoRouterState state) {
-              return const ApiScreen();
-            },
-          ),
+          // Dev-only route for API inspection
+          if (config.env == AppEnvironment.dev)
+            GoRoute(
+              path: '/api',
+              builder: (BuildContext context, GoRouterState state) {
+                return const ApiScreen();
+              },
+            ),
         ],
       ),
       GoRoute(

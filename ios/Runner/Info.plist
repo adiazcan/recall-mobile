@@ -45,12 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>msauthv2</string>
+		<string>msauthv3</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>msauth</string>
+				<string>msauth.com.recall.mobile</string>
 			</array>
 			<key>CFBundleURLName</key>
 			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>

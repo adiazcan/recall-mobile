@@ -49,6 +49,7 @@ class InboxState {
     this.nextCursor,
     required this.hasMore,
     required this.isLoadingMore,
+    this.backgroundError,
   });
 
   final List<Item> items;
@@ -56,6 +57,7 @@ class InboxState {
   final String? nextCursor;
   final bool hasMore;
   final bool isLoadingMore;
+  final String? backgroundError;
 
   InboxState copyWith({
     List<Item>? items,
@@ -63,6 +65,7 @@ class InboxState {
     String? Function()? nextCursor,
     bool? hasMore,
     bool? isLoadingMore,
+    String? Function()? backgroundError,
   }) {
     return InboxState(
       items: items ?? this.items,
@@ -70,6 +73,9 @@ class InboxState {
       nextCursor: nextCursor != null ? nextCursor() : this.nextCursor,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      backgroundError: backgroundError != null
+          ? backgroundError()
+          : this.backgroundError,
     );
   }
 }
@@ -93,6 +99,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
       nextCursor: null,
       hasMore: cachedItems.isEmpty, // Assume more if cache is empty
       isLoadingMore: false,
+      backgroundError: null,
     );
 
     // Fetch fresh data in background
@@ -139,14 +146,31 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
           nextCursor: () => response.nextCursor,
           hasMore: response.nextCursor != null,
           isLoadingMore: false,
+          backgroundError: () => null,
         ),
       );
     } catch (error, stackTrace) {
       if (resetList) {
-        state = AsyncValue.error(error, stackTrace);
+        if (currentState.items.isEmpty) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(
+            currentState.copyWith(
+              isLoadingMore: false,
+              backgroundError: () =>
+                  'Could not refresh items. Showing cached data.',
+            ),
+          );
+        }
       } else {
         // Keep current items on load-more error, just stop loading
-        state = AsyncValue.data(currentState.copyWith(isLoadingMore: false));
+        state = AsyncValue.data(
+          currentState.copyWith(
+            isLoadingMore: false,
+            backgroundError: () =>
+                'Could not load more items. Please try again.',
+          ),
+        );
       }
     }
   }
@@ -182,6 +206,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
         nextCursor: () => null,
         hasMore: true,
         isLoadingMore: false,
+        backgroundError: () => null,
       ),
     );
 

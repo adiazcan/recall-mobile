@@ -97,6 +97,58 @@ class _RecallAppState extends ConsumerState<RecallApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
+      builder: (context, child) {
+        final networkStatusAsync = ref.watch(networkStatusProvider);
+        final isOffline = networkStatusAsync.maybeWhen(
+          data: (status) => status == NetworkStatus.offline,
+          orElse: () => false,
+        );
+
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            if (isOffline)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.wifi_off,
+                            size: 16,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Offline mode: showing cached data',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
       routerConfig: ref.watch(routerProvider),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,6 +9,7 @@ import '../auth/auth_state.dart';
 import '../auth/token_store.dart';
 import '../cache/cache_service.dart';
 import '../config/app_config.dart';
+import '../models/tag.dart';
 import '../network/api_client.dart';
 import '../network/dio_provider.dart';
 import '../openapi/openapi_repository.dart';
@@ -60,6 +62,64 @@ final openApiRepositoryProvider = Provider<OpenApiRepository>((ref) {
     client: ref.watch(dioProvider),
     config: ref.watch(appConfigProvider),
   );
+});
+
+class TagsNotifier extends AsyncNotifier<List<Tag>> {
+  @override
+  Future<List<Tag>> build() async {
+    final cacheService = await ref.read(cacheServiceProvider.future);
+    final cachedTagsJson = cacheService.getCachedTags();
+
+    if (cachedTagsJson != null && cachedTagsJson.isNotEmpty) {
+      final cachedTags = CacheService.decodeList(cachedTagsJson, Tag.fromJson);
+      Future<void>(() => refresh());
+      return cachedTags;
+    }
+
+    return _fetchTags();
+  }
+
+  Future<void> refresh() async {
+    final tags = await _fetchTags();
+    state = AsyncValue.data(tags);
+  }
+
+  Future<List<Tag>> _fetchTags() async {
+    final apiClient = ref.read(apiClientProvider);
+    final cacheService = await ref.read(cacheServiceProvider.future);
+    final tags = await apiClient.getTags();
+    final jsonString = CacheService.encodeList(tags, (tag) => tag.toJson());
+    await cacheService.cacheTags(jsonString);
+    return tags;
+  }
+}
+
+final tagsProvider = AsyncNotifierProvider<TagsNotifier, List<Tag>>(
+  TagsNotifier.new,
+);
+
+enum NetworkStatus { online, offline }
+
+NetworkStatus _networkStatusFromResults(List<ConnectivityResult> results) {
+  if (results.isEmpty) {
+    return NetworkStatus.offline;
+  }
+
+  final hasConnection = results.any(
+    (result) => result != ConnectivityResult.none,
+  );
+  return hasConnection ? NetworkStatus.online : NetworkStatus.offline;
+}
+
+final networkStatusProvider = StreamProvider<NetworkStatus>((ref) async* {
+  final connectivity = Connectivity();
+
+  final initialResult = await connectivity.checkConnectivity();
+  yield _networkStatusFromResults(initialResult);
+
+  await for (final results in connectivity.onConnectivityChanged) {
+    yield _networkStatusFromResults(results);
+  }
 });
 
 /// Provider for the app router

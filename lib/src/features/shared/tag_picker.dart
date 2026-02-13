@@ -4,12 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../models/tag.dart';
 
-// Provider for tags list
-final tagsProvider = FutureProvider<List<Tag>>((ref) async {
-  final apiClient = ref.watch(apiClientProvider);
-  return apiClient.getTags();
-});
-
 class TagPicker extends ConsumerStatefulWidget {
   const TagPicker({
     super.key,

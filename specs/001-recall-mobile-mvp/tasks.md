@@ -147,10 +147,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T044 [P] [US6] Create CollectionsProviders with collections list state, create/rename/delete methods calling ApiClient in lib/src/features/collections/collections_providers.dart
-- [ ] T045 [US6] Create CollectionsScreen with list of collections showing name and item count, create/rename/delete actions with dialogs, duplicate name validation, and tap-to-view-items navigation in lib/src/features/collections/collections_screen.dart
-- [ ] T046 [US6] Wire CollectionsScreen into router at /collections route and into HomeScreen bottom nav tab in lib/src/app/router.dart
-- [ ] T047 [US6] Integrate CacheService into collections providers: cache collections list, load from cache on startup in lib/src/features/collections/collections_providers.dart
+- [X] T044 [P] [US6] Create CollectionsProviders with collections list state, create/rename/delete methods calling ApiClient in lib/src/features/collections/collections_providers.dart
+- [X] T045 [US6] Create CollectionsScreen with list of collections showing name and item count, create/rename/delete actions with dialogs, duplicate name validation, and tap-to-view-items navigation in lib/src/features/collections/collections_screen.dart
+- [X] T046 [US6] Wire CollectionsScreen into router at /collections route and into HomeScreen bottom nav tab in lib/src/app/router.dart
+- [X] T047 [US6] Integrate CacheService into collections providers: cache collections list, load from cache on startup in lib/src/features/collections/collections_providers.dart
 
 **Checkpoint**: User Story 6 is fully functional — full collections CRUD with cache works.
 
@@ -164,10 +164,10 @@
 
 ### Implementation for User Story 7
 
-- [ ] T048 [US7] Integrate CacheService into tags provider: cache tags list on fetch, load from cache on startup in lib/src/app/providers.dart
-- [ ] T049 [US7] Add stale-while-revalidate pattern to all list providers: show cached data immediately, fetch fresh data in background, update UI on arrival in lib/src/features/inbox/inbox_providers.dart and lib/src/features/collections/collections_providers.dart
-- [ ] T050 [US7] Add consistent error handling to all mutation actions (save, delete, favorite, archive, tag edit, collection CRUD): show ErrorView with retry, preserve user input on failure in lib/src/features/item_detail/item_detail_screen.dart and lib/src/features/save_url/save_url_screen.dart
-- [ ] T051 [US7] Add network connectivity awareness: detect offline state and show a non-blocking indicator bar in lib/src/app/app.dart
+- [X] T048 [US7] Integrate CacheService into tags provider: cache tags list on fetch, load from cache on startup in lib/src/app/providers.dart
+- [X] T049 [US7] Add stale-while-revalidate pattern to all list providers: show cached data immediately, fetch fresh data in background, update UI on arrival in lib/src/features/inbox/inbox_providers.dart and lib/src/features/collections/collections_providers.dart
+- [X] T050 [US7] Add consistent error handling to all mutation actions (save, delete, favorite, archive, tag edit, collection CRUD): show ErrorView with retry, preserve user input on failure in lib/src/features/item_detail/item_detail_screen.dart and lib/src/features/save_url/save_url_screen.dart
+- [X] T051 [US7] Add network connectivity awareness: detect offline state and show a non-blocking indicator bar in lib/src/app/app.dart
 
 **Checkpoint**: User Story 7 is fully functional — offline cache, error handling, and retry work across all screens.
 
@@ -177,11 +177,11 @@
 
 **Purpose**: Final integration, cleanup, and validation
 
-- [ ] T052 Update existing widget_test.dart to work with new app structure (auth guard, new routes, new home tabs) in test/widget_test.dart
-- [ ] T053 Update existing app_config_test.dart to cover new Entra ID config fields in test/config/app_config_test.dart
-- [ ] T054 Remove or gate existing ApiScreen behind dev-only flag (not part of production nav) in lib/src/features/api/api_screen.dart and lib/src/app/router.dart
-- [ ] T055 Run dart format, flutter analyze, flutter test and fix any issues
-- [ ] T056 Validate full user journey: sign in → browse inbox → filter → view detail → favorite → archive → edit tags → move collection → save URL → share sheet → collections CRUD → sign out
+- [X] T052 Update existing widget_test.dart to work with new app structure (auth guard, new routes, new home tabs) in test/widget_test.dart
+- [X] T053 Update existing app_config_test.dart to cover new Entra ID config fields in test/config/app_config_test.dart
+- [X] T054 Remove or gate existing ApiScreen behind dev-only flag (not part of production nav) in lib/src/features/api/api_screen.dart and lib/src/app/router.dart
+- [X] T055 Run dart format, flutter analyze, flutter test and fix any issues
+- [X] T056 Validate full user journey: sign in → browse inbox → filter → view detail → favorite → archive → edit tags → move collection → save URL → share sheet → collections CRUD → sign out
 
 ---
 

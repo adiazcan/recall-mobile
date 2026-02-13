@@ -26,7 +26,33 @@ cd ios && pod install && cd ..
 
 ### Entra ID Setup
 
-The app requires these `--dart-define` values for authentication (in addition to existing ones):
+The app requires Entra ID configuration. You have two options:
+
+#### Option 1: Using .env Files (Recommended)
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env.dev
+   ```
+
+2. Edit `.env.dev` with your Azure app registration values:
+   ```bash
+   ENTRA_CLIENT_ID=your-client-id-here
+   ENTRA_TENANT_ID=your-tenant-id-here
+   ENTRA_SCOPES=api://recall-dev/Items.ReadWrite User.Read offline_access
+   ENTRA_REDIRECT_URI=msauth://com.recall.mobile/callback
+   ```
+
+3. Run the app using the helper script:
+   ```bash
+   ./run.sh dev     # uses .env.dev
+   ./run.sh staging # uses .env.staging
+   ./run.sh prod    # uses .env.prod
+   ```
+
+#### Option 2: Manual --dart-define (Alternative)
+
+If you prefer not to use .env files, pass configuration directly:
 
 | Define             | Description                          | Example                               |
 |--------------------|--------------------------------------|---------------------------------------|
@@ -35,14 +61,11 @@ The app requires these `--dart-define` values for authentication (in addition to
 | `ENTRA_SCOPES`     | Space-separated API scopes           | `api://recall/Items.ReadWrite`        |
 | `ENTRA_REDIRECT_URI`| Mobile redirect URI                 | `msauth://com.recall.mobile/callback` |
 
-### Running
-
 ```bash
-# Dev (uses hardcoded API URLs, add Entra defines)
 fvm flutter run -t lib/main_dev.dart \
   --dart-define=ENTRA_CLIENT_ID=your-client-id \
   --dart-define=ENTRA_TENANT_ID=your-tenant-id \
-  --dart-define=ENTRA_SCOPES="api://recall/Items.ReadWrite" \
+  --dart-define=ENTRA_SCOPES="api://recall/Items.ReadWrite User.Read offline_access" \
   --dart-define=ENTRA_REDIRECT_URI="msauth://com.recall.mobile/callback"
 ```
 

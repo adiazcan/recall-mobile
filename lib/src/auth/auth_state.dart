@@ -73,6 +73,14 @@ class AuthStateNotifier extends AsyncNotifier<AuthState> {
           error: e.message,
         ),
       );
+    } catch (e) {
+      // Catch any other exceptions that weren't wrapped
+      state = AsyncData(
+        state.value!.copyWith(
+          status: AuthStatus.unauthenticated,
+          error: 'Authentication failed: ${e.toString()}',
+        ),
+      );
     }
   }
 

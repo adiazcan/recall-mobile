@@ -28,7 +28,7 @@ Dio buildDioClient({
 
   if (config.logHttp) {
     dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: false),
+      LogInterceptor(requestBody: true, responseBody: true),
     );
   }
 
