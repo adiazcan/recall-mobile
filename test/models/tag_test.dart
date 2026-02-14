@@ -29,4 +29,16 @@ void main() {
       throwsA(isA<FormatException>()),
     );
   });
+
+  test('Tag.fromJson parses item count when count is an int', () {
+    final tag = Tag.fromJson({'id': 'tag-1', 'name': 'work', 'count': 4});
+
+    expect(tag.itemCount, 4);
+  });
+
+  test('Tag.fromJson parses item count when count is a string', () {
+    final tag = Tag.fromJson({'id': 'tag-1', 'name': 'work', 'count': '7'});
+
+    expect(tag.itemCount, 7);
+  });
 }

@@ -83,6 +83,8 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
       if (mounted) {
         // Refresh inbox to show new item
         ref.invalidate(inboxProvider);
+        ref.invalidate(collectionsProvider);
+        ref.invalidate(tagsProvider);
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(

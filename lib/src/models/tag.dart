@@ -1,8 +1,9 @@
 class Tag {
-  const Tag({required this.id, required this.name});
+  const Tag({required this.id, required this.name, this.itemCount});
 
   final String id;
   final String name;
+  final int? itemCount;
 
   factory Tag.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'];
@@ -18,11 +19,19 @@ class Tag {
       throw const FormatException('Tag requires a non-empty id or name');
     }
 
-    return Tag(id: resolvedId, name: resolvedName);
+    int? parsedCount;
+    final rawCount = json['count'];
+    if (rawCount is int) {
+      parsedCount = rawCount;
+    } else if (rawCount is String) {
+      parsedCount = int.tryParse(rawCount);
+    }
+
+    return Tag(id: resolvedId, name: resolvedName, itemCount: parsedCount);
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name};
+    return {'id': id, 'name': name, 'count': itemCount};
   }
 
   @override

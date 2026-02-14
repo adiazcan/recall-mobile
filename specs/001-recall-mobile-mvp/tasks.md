@@ -185,6 +185,7 @@
 - [X] T057 Fix tag parsing crash when backend returns null tag fields while loading or creating tags in lib/src/models/tag.dart and lib/src/network/api_client.dart
 - [X] T058 Fix item tag update 400 by adding backend-compatible retry payloads and resilient tag creation response parsing in lib/src/network/api_client.dart
 - [X] T059 Fix tag creation/update contract mismatch for live API (no POST /tags, use tags:string[]) in lib/src/network/api_client.dart, lib/src/features/item_detail/item_detail_providers.dart, and lib/src/features/save_url/save_url_screen.dart
+- [X] T060 Refresh inbox/drawer menu data after item mutations and show tag item counts in menu in lib/src/features/item_detail/item_detail_providers.dart, lib/src/features/save_url/save_url_screen.dart, lib/src/features/home/app_drawer.dart, and lib/src/models/tag.dart
 
 ---
 

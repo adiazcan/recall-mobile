@@ -165,8 +165,12 @@ class AppDrawer extends ConsumerWidget {
             .map(
               (tag) => _TagNavItem(
                 label: tag.name,
+                count: tag.itemCount,
                 selected: currentPath == '/tags/${tag.id}',
-                onTap: () => _go(context, '/tags/${tag.id}'),
+                onTap: () => _go(
+                  context,
+                  '/tags/${Uri.encodeComponent(tag.id)}',
+                ),
               ),
             )
             .toList();
@@ -325,11 +329,13 @@ class _TagNavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.count,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
@@ -365,6 +371,8 @@ class _TagNavItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (count != null && count! > 0)
+                    Text('$count', style: RecallTextStyles.drawerCount),
                 ],
               ),
             ),

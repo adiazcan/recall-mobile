@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../models/item.dart';
 import '../../models/tag.dart';
+import '../collections/collections_providers.dart';
 import '../inbox/inbox_providers.dart';
 
 // Provider for a single item's state
@@ -34,6 +35,7 @@ class ItemDetailNotifier extends Notifier<void> {
     // Update the item in the inbox list
     final inboxNotifier = ref.read(inboxProvider.notifier);
     inboxNotifier.updateItem(updatedItem);
+    _refreshMenuData();
 
     return updatedItem;
   }
@@ -51,6 +53,7 @@ class ItemDetailNotifier extends Notifier<void> {
     // Update the item in the inbox list
     final inboxNotifier = ref.read(inboxProvider.notifier);
     inboxNotifier.updateItem(updatedItem);
+    _refreshMenuData();
 
     return updatedItem;
   }
@@ -68,6 +71,7 @@ class ItemDetailNotifier extends Notifier<void> {
     // Update the item in the inbox list
     final inboxNotifier = ref.read(inboxProvider.notifier);
     inboxNotifier.updateItem(updatedItem);
+    _refreshMenuData();
 
     return updatedItem;
   }
@@ -85,6 +89,7 @@ class ItemDetailNotifier extends Notifier<void> {
     // Update the item in the inbox list
     final inboxNotifier = ref.read(inboxProvider.notifier);
     inboxNotifier.updateItem(updatedItem);
+    _refreshMenuData();
 
     return updatedItem;
   }
@@ -99,6 +104,13 @@ class ItemDetailNotifier extends Notifier<void> {
     // Remove the item from the inbox list
     final inboxNotifier = ref.read(inboxProvider.notifier);
     inboxNotifier.removeItem(itemId);
+    _refreshMenuData();
+  }
+
+  void _refreshMenuData() {
+    ref.invalidate(inboxProvider);
+    ref.invalidate(collectionsProvider);
+    ref.invalidate(tagsProvider);
   }
 }
 
