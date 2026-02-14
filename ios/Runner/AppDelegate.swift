@@ -4,6 +4,26 @@ import MSAL
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+
+  // Expose the key window via UIApplicationDelegate.window so that plugins
+  // (e.g. msal_flutter) that access UIApplication.shared.delegate?.window
+  // can find the root view controller in the scene-based lifecycle.
+  private var _window: UIWindow?
+  override var window: UIWindow? {
+    get {
+      return _window
+        ?? UIApplication.shared.connectedScenes
+             .compactMap { $0 as? UIWindowScene }
+             .flatMap { $0.windows }
+             .first { $0.isKeyWindow }
+        ?? UIApplication.shared.connectedScenes
+             .compactMap { $0 as? UIWindowScene }
+             .flatMap { $0.windows }
+             .first
+    }
+    set { _window = newValue }
+  }
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
