@@ -61,6 +61,12 @@ coverage/
 
 # Environment files
 *.env
+.env*
+
+# Universal
+Thumbs.db
+*.tmp
+.vscode/
 
 # FVM Version Cache
 .fvm/

@@ -129,8 +129,10 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
 
       // Apply client-side filtering as a fallback in case the API
       // does not honour filter query parameters.
-      final filteredItems =
-          _applyLocalFilters(response.items, currentState.filters);
+      final filteredItems = _applyLocalFilters(
+        response.items,
+        currentState.filters,
+      );
 
       final newItems = resetList
           ? filteredItems
@@ -249,11 +251,15 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
     }
 
     if (filters.status != null) {
-      result = result.where((item) => item.status.name == filters.status).toList();
+      result = result
+          .where((item) => item.status.name == filters.status)
+          .toList();
     }
 
     if (filters.collectionId != null) {
-      result = result.where((item) => item.collectionId == filters.collectionId).toList();
+      result = result
+          .where((item) => item.collectionId == filters.collectionId)
+          .toList();
     }
 
     if (filters.tagIds != null && filters.tagIds!.isNotEmpty) {

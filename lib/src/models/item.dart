@@ -56,7 +56,8 @@ class Item {
       status: ItemStatus.fromJson((json['status'] as String?) ?? 'unread'),
       isFavorite: (json['isFavorite'] as bool?) ?? false,
       collectionId: json['collectionId'] as String?,
-      tags: (json['tags'] as List<dynamic>?)
+      tags:
+          (json['tags'] as List<dynamic>?)
               ?.map((t) => Tag.fromJson(t as Map<String, dynamic>))
               .toList() ??
           [],

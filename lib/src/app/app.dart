@@ -20,7 +20,8 @@ class RecallApp extends ConsumerStatefulWidget {
   ConsumerState<RecallApp> createState() => _RecallAppState();
 }
 
-class _RecallAppState extends ConsumerState<RecallApp> with WidgetsBindingObserver {
+class _RecallAppState extends ConsumerState<RecallApp>
+    with WidgetsBindingObserver {
   StreamSubscription? _intentMediaStreamSubscription;
 
   @override
@@ -110,7 +111,9 @@ class _RecallAppState extends ConsumerState<RecallApp> with WidgetsBindingObserv
   /// and clear the list.
   Future<void> _checkPendingSharedUrls() async {
     try {
-      final result = await _pendingUrlsChannel.invokeMethod<List<dynamic>>('getPendingUrls');
+      final result = await _pendingUrlsChannel.invokeMethod<List<dynamic>>(
+        'getPendingUrls',
+      );
       if (result != null && result.isNotEmpty) {
         // Process the first pending URL
         final url = result.first as String;
@@ -134,7 +137,9 @@ class _RecallAppState extends ConsumerState<RecallApp> with WidgetsBindingObserv
       final tokenStore = ref.read(tokenStoreProvider);
       final config = ref.read(appConfigProvider);
       final token = await tokenStore.getToken();
-      debugPrint('[Share] _syncAuthConfigToExtension: token=${token != null ? "present (${token.length} chars)" : "NULL"}, apiBaseUrl=${config.apiBaseUrl}');
+      debugPrint(
+        '[Share] _syncAuthConfigToExtension: token=${token != null ? "present (${token.length} chars)" : "NULL"}, apiBaseUrl=${config.apiBaseUrl}',
+      );
       if (token != null) {
         await _pendingUrlsChannel.invokeMethod<void>('syncAuthConfig', {
           'accessToken': token,
@@ -157,7 +162,9 @@ class _RecallAppState extends ConsumerState<RecallApp> with WidgetsBindingObserv
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (prev, next) {
       final status = next.valueOrNull?.status;
       if (status == AuthStatus.authenticated) {
-        debugPrint('[Share] Auth state → authenticated, syncing token to extension');
+        debugPrint(
+          '[Share] Auth state → authenticated, syncing token to extension',
+        );
         _syncAuthConfigToExtension();
       }
     });

@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:msal_flutter/msal_flutter.dart';
 
 import 'token_store.dart';
@@ -19,22 +21,28 @@ class AuthService {
 
   PublicClientApplication? _app;
 
+  void _log(String message) {
+    developer.log(message, name: 'AuthService');
+  }
+
   Future<void> _ensureInitialized() async {
     if (_app != null) return;
 
-    print('[AuthService] Initializing MSAL with:');
-    print('[AuthService]   Client ID: $clientId');
-    print('[AuthService]   Tenant ID: $tenantId');
-    print('[AuthService]   Authority: https://login.microsoftonline.com/$tenantId');
+    _log('Initializing MSAL with:');
+    _log('  Client ID: $clientId');
+    _log('  Tenant ID: $tenantId');
+    _log(
+      '[AuthService]   Authority: https://login.microsoftonline.com/$tenantId',
+    );
 
     try {
       _app = await PublicClientApplication.createPublicClientApplication(
         clientId,
         authority: 'https://login.microsoftonline.com/$tenantId',
       );
-      print('[AuthService] MSAL initialized successfully');
+      _log('MSAL initialized successfully');
     } catch (e) {
-      print('[AuthService] Failed to initialize MSAL: $e');
+      _log('Failed to initialize MSAL: $e');
       rethrow;
     }
   }
@@ -43,21 +51,23 @@ class AuthService {
     try {
       await _ensureInitialized();
 
-      print('[AuthService] Starting sign-in with scopes: $_scopes');
-      print('[AuthService] Redirect URI: $redirectUri');
-      print('[AuthService] Authority: https://login.microsoftonline.com/$tenantId');
+      _log('Starting sign-in with scopes: $_scopes');
+      _log('Redirect URI: $redirectUri');
+      _log(
+        '[AuthService] Authority: https://login.microsoftonline.com/$tenantId',
+      );
 
       final result = await _app!.acquireToken(_scopes);
 
-      print('[AuthService] Sign-in successful, token acquired');
+      _log('Sign-in successful, token acquired');
       await tokenStore.saveToken(result);
       return result;
     } on MsalException catch (e) {
-      print('[AuthService] MSAL Exception: ${e.errorMessage}');
+      _log('MSAL Exception: ${e.errorMessage}');
       throw AuthException('Authentication failed: ${e.errorMessage}');
     } catch (e, stackTrace) {
-      print('[AuthService] Unexpected error during sign-in: $e');
-      print('[AuthService] Stack trace: $stackTrace');
+      _log('Unexpected error during sign-in: $e');
+      _log('Stack trace: $stackTrace');
       throw AuthException('Sign in failed: ${e.toString()}');
     }
   }
@@ -81,7 +91,7 @@ class AuthService {
       final result = await _app!.acquireTokenSilent(_scopes);
       await tokenStore.saveToken(result);
       return result;
-    } on MsalException catch (e) {
+    } on MsalException {
       // Silent auth failed - user needs to sign in interactively
       return null;
     } catch (e) {

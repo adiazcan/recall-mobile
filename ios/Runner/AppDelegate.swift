@@ -9,18 +9,20 @@ import MSAL
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
-    
+
     // Register method channel for pending shared URLs from Share Extension
-    let controller = window?.rootViewController as! FlutterViewController
+    guard let registrar = self.registrar(forPlugin: "PendingUrlsChannel") else {
+      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
     let pendingUrlsChannel = FlutterMethodChannel(
       name: "com.recall.mobile/pendingUrls",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: registrar.messenger()
     )
-    
+
     pendingUrlsChannel.setMethodCallHandler { [weak self] (call, result) in
       let appGroupId = Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String ?? "group.com.recall.mobile"
       let defaults = UserDefaults(suiteName: appGroupId)
-      
+
       switch call.method {
       case "getPendingUrls":
         let urls = defaults?.stringArray(forKey: "pendingSharedURLs") ?? []
@@ -46,10 +48,10 @@ import MSAL
         result(FlutterMethodNotImplemented)
       }
     }
-    
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
-  
+
   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
     guard let sourceApplication = options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String else {
       return false
