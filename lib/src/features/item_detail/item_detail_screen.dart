@@ -274,7 +274,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final itemAsync = ref.watch(itemDetailProvider(widget.itemId));
-    final item = itemAsync.valueOrNull;
+    final item = itemAsync.asData?.value;
 
     return Scaffold(
       backgroundColor: RecallColors.white,
