@@ -56,14 +56,36 @@ class Item {
       status: ItemStatus.fromJson((json['status'] as String?) ?? 'unread'),
       isFavorite: (json['isFavorite'] as bool?) ?? false,
       collectionId: json['collectionId'] as String?,
-      tags:
-          (json['tags'] as List<dynamic>?)
-              ?.map((t) => Tag.fromJson(t as Map<String, dynamic>))
-              .toList() ??
-          [],
+      tags: _parseTags(json['tags']),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
+  }
+
+  static List<Tag> _parseTags(dynamic value) {
+    if (value is! List<dynamic>) {
+      return [];
+    }
+
+    return value
+        .map((tagJson) {
+          if (tagJson is Map<String, dynamic>) {
+            final id = tagJson['id']?.toString();
+            final name = tagJson['name']?.toString();
+            if (id == null || id.isEmpty || name == null || name.isEmpty) {
+              return null;
+            }
+            return Tag(id: id, name: name);
+          }
+
+          if (tagJson is String && tagJson.isNotEmpty) {
+            return Tag(id: tagJson, name: tagJson);
+          }
+
+          return null;
+        })
+        .whereType<Tag>()
+        .toList();
   }
 
   Map<String, dynamic> toJson() {

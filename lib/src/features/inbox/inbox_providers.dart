@@ -33,7 +33,7 @@ class InboxFilters {
   }
 
   bool get hasActiveFilters =>
-      status != null ||
+      (status != null && status != 'unread') ||
       isFavorite != null ||
       collectionId != null ||
       (tagIds != null && tagIds!.isNotEmpty);
@@ -95,7 +95,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
     // Set initial state with cached items
     final initialState = InboxState(
       items: cachedItems,
-      filters: const InboxFilters(),
+      filters: const InboxFilters(status: 'unread'),
       nextCursor: null,
       hasMore: true, // Optimistically assume there may be more items
       isLoadingMore: false,

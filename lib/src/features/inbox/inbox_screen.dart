@@ -91,7 +91,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       case InboxViewFilter.archive:
         return const InboxFilters(status: 'archived');
       case InboxViewFilter.inbox:
-        return const InboxFilters();
+        return const InboxFilters(status: 'unread');
     }
   }
 
@@ -200,7 +200,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               if (filters.hasActiveFilters)
                 TextButton(
                   onPressed: () {
-                    ref.read(inboxProvider.notifier).clearFilters();
+                    ref
+                        .read(inboxProvider.notifier)
+                        .updateFilters(_buildRouteFilters());
                   },
                   child: const Text('Clear all'),
                 ),
