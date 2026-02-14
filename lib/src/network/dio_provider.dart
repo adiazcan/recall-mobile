@@ -27,12 +27,14 @@ Dio buildDioClient({
   );
 
   if (config.logHttp) {
-    dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: false, // Disabled to prevent PII/token leaks
-      requestHeader: false, // Disabled to prevent Authorization header leaks
-      responseHeader: false,
-    ));
+    dio.interceptors.add(
+      LogInterceptor(
+        requestBody: true,
+        responseBody: false, // Disabled to prevent PII/token leaks
+        requestHeader: false, // Disabled to prevent Authorization header leaks
+        responseHeader: false,
+      ),
+    );
   }
 
   return dio;

@@ -162,8 +162,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       if (selectedCollectionId == null) return;
       final targetCollectionId =
           selectedCollectionId == CollectionPickerDialog.inboxSentinel
-              ? null
-              : selectedCollectionId;
+          ? null
+          : selectedCollectionId;
 
       setState(() {
         _isUpdating = true;
@@ -643,8 +643,9 @@ class CollectionPickerDialog extends ConsumerWidget {
                 // ignore: deprecated_member_use
                 onChanged: null,
               ),
-              onTap: () =>
-                  Navigator.of(context).pop(CollectionPickerDialog.inboxSentinel),
+              onTap: () => Navigator.of(
+                context,
+              ).pop(CollectionPickerDialog.inboxSentinel),
             ),
             const Divider(),
             // Collections
