@@ -24,7 +24,10 @@ class SettingsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Configuration', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Configuration',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             Text('Environment: ${config.env.name}'),
             const SizedBox(height: 8),
@@ -34,7 +37,10 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
-            Text('Authentication', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Authentication',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             authState.when(
               data: (state) {
@@ -91,7 +97,9 @@ class SettingsScreen extends ConsumerWidget {
                               );
 
                               if (shouldSignOut == true && context.mounted) {
-                                await ref.read(authStateProvider.notifier).signOut();
+                                await ref
+                                    .read(authStateProvider.notifier)
+                                    .signOut();
                               }
                             },
                       icon: isSigningOut

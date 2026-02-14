@@ -26,6 +26,7 @@ class ApiClient {
       if (status?.isNotEmpty ?? false) 'status': status,
       if (isFavorite != null) 'favorite': isFavorite.toString(),
       if (collectionId?.isNotEmpty ?? false) 'collectionId': collectionId,
+      if (tagIds?.isNotEmpty ?? false) 'tag': tagIds!.first,
       if (tagIds?.isNotEmpty ?? false) 'tags': tagIds!.join(','),
     };
 
@@ -51,16 +52,34 @@ class ApiClient {
     String? collectionId,
     List<String>? tagIds,
   }) async {
-    final response = await dio.post(
-      '/api/v1/items',
-      data: {
+    final tags = tagIds?.where((tag) => tag.trim().isNotEmpty).toList();
+
+    final primaryPayload = {
+      'url': url,
+      if (collectionId?.isNotEmpty ?? false) 'collectionId': collectionId,
+      if (tags?.isNotEmpty ?? false) 'tags': tags,
+    };
+
+    try {
+      final response = await dio.post('/api/v1/items', data: primaryPayload);
+      return Item.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (error) {
+      final shouldRetryLegacy =
+          error.response?.statusCode == 400 && tags?.isNotEmpty == true;
+
+      if (!shouldRetryLegacy) {
+        rethrow;
+      }
+
+      final legacyPayload = {
         'url': url,
         if (collectionId?.isNotEmpty ?? false) 'collectionId': collectionId,
-        if (tagIds?.isNotEmpty ?? false) 'tagIds': tagIds,
-      },
-    );
+        'tagIds': tags,
+      };
 
-    return Item.fromJson(response.data as Map<String, dynamic>);
+      final response = await dio.post('/api/v1/items', data: legacyPayload);
+      return Item.fromJson(response.data as Map<String, dynamic>);
+    }
   }
 
   Future<Item> updateItem(
@@ -70,14 +89,48 @@ class ApiClient {
     String? collectionId,
     List<String>? tagIds,
   }) async {
+    final tags = tagIds?.where((tag) => tag.trim().isNotEmpty).toList();
+
     final data = <String, dynamic>{};
     if (status != null) data['status'] = status;
     if (isFavorite != null) data['isFavorite'] = isFavorite;
     if (collectionId != null) data['collectionId'] = collectionId;
-    if (tagIds != null) data['tagIds'] = tagIds;
+    if (tags != null) data['tags'] = tags;
 
-    final response = await dio.patch('/api/v1/items/$id', data: data);
-    return Item.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final response = await dio.patch('/api/v1/items/$id', data: data);
+      return Item.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (error) {
+      final shouldRetryWithTagPayloadVariants =
+          error.response?.statusCode == 400 && tags != null;
+
+      if (!shouldRetryWithTagPayloadVariants) {
+        rethrow;
+      }
+
+      final commonPayload = <String, dynamic>{};
+      if (status != null) commonPayload['status'] = status;
+      if (isFavorite != null) commonPayload['isFavorite'] = isFavorite;
+      if (collectionId != null) commonPayload['collectionId'] = collectionId;
+
+      final retryPayloads = <Map<String, dynamic>>[
+        {...commonPayload, 'tagIds': tags},
+        {...commonPayload, 'tags': tags.join(',')},
+      ];
+
+      for (final payload in retryPayloads) {
+        try {
+          final response = await dio.patch('/api/v1/items/$id', data: payload);
+          return Item.fromJson(response.data as Map<String, dynamic>);
+        } on DioException catch (retryError) {
+          if (retryError.response?.statusCode != 400) {
+            rethrow;
+          }
+        }
+      }
+
+      rethrow;
+    }
   }
 
   Future<void> deleteItem(String id) async {
@@ -125,14 +178,37 @@ class ApiClient {
   Future<List<Tag>> getTags() async {
     final response = await dio.get('/api/v1/tags');
     final data = response.data as Map<String, dynamic>;
-    final tags = data['tags'] as List<dynamic>;
+
+    final rawTags = data['tags'];
+    if (rawTags is! List<dynamic>) {
+      return [];
+    }
+
+    final tags = rawTags;
     return tags
-        .map((json) => Tag.fromJson(json as Map<String, dynamic>))
+        .map((json) {
+          if (json is! Map<String, dynamic>) {
+            return null;
+          }
+
+          try {
+            return Tag.fromJson(json);
+          } on FormatException {
+            return null;
+          }
+        })
+        .whereType<Tag>()
         .toList();
   }
 
   Future<Tag> createTag(String name) async {
-    final response = await dio.post('/api/v1/tags', data: {'name': name});
-    return Tag.fromJson(response.data as Map<String, dynamic>);
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      throw const FormatException('Tag name cannot be empty');
+    }
+
+    // Live backend does not expose POST /api/v1/tags.
+    // Tags are created implicitly when attached to an item update/create.
+    return Tag(id: trimmed, name: trimmed);
   }
 }

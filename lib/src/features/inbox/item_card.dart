@@ -81,10 +81,7 @@ class ItemCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       const _MetaDot(),
                       const SizedBox(width: 8),
-                      Text(
-                        timeAgo,
-                        style: RecallTextStyles.itemMeta,
-                      ),
+                      Text(timeAgo, style: RecallTextStyles.itemMeta),
                       if (item.tags.isNotEmpty) ...[
                         const SizedBox(width: 8),
                         Expanded(
@@ -92,12 +89,16 @@ class ItemCard extends StatelessWidget {
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               children: [
-                                ...item.tags.take(2).map(
-                                  (tag) => Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: _TagPill(label: '#${tag.name}'),
-                                  ),
-                                ),
+                                ...item.tags
+                                    .take(2)
+                                    .map(
+                                      (tag) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8,
+                                        ),
+                                        child: _TagPill(label: '#${tag.name}'),
+                                      ),
+                                    ),
                               ],
                             ),
                           ),
@@ -172,16 +173,11 @@ class _FaviconTile extends StatelessWidget {
                 width: 38,
                 height: 38,
                 fit: BoxFit.cover,
-                errorWidget: (context, url, error) => Text(
-                  initial,
-                  style: RecallTextStyles.faviconFallback,
-                ),
+                errorWidget: (context, url, error) =>
+                    Text(initial, style: RecallTextStyles.faviconFallback),
               ),
             )
-          : Text(
-              initial,
-              style: RecallTextStyles.faviconFallback,
-            ),
+          : Text(initial, style: RecallTextStyles.faviconFallback),
     );
   }
 }
@@ -217,10 +213,7 @@ class _TagPill extends StatelessWidget {
         color: RecallColors.neutral100,
         borderRadius: BorderRadius.all(Radius.circular(999)),
       ),
-      child: Text(
-        label,
-        style: RecallTextStyles.tag,
-      ),
+      child: Text(label, style: RecallTextStyles.tag),
     );
   }
 }

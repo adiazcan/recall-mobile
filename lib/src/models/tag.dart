@@ -5,7 +5,20 @@ class Tag {
   final String name;
 
   factory Tag.fromJson(Map<String, dynamic> json) {
-    return Tag(id: json['id'] as String, name: json['name'] as String);
+    final rawId = json['id'];
+    final rawName = json['name'];
+
+    final id = rawId?.toString().trim() ?? '';
+    final name = rawName?.toString().trim() ?? '';
+
+    final resolvedId = id.isNotEmpty ? id : name;
+    final resolvedName = name.isNotEmpty ? name : id;
+
+    if (resolvedId.isEmpty || resolvedName.isEmpty) {
+      throw const FormatException('Tag requires a non-empty id or name');
+    }
+
+    return Tag(id: resolvedId, name: resolvedName);
   }
 
   Map<String, dynamic> toJson() {

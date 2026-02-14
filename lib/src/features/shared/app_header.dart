@@ -43,10 +43,7 @@ class HeaderTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: RecallTextStyles.headerTitle,
-    );
+    return Text(text, style: RecallTextStyles.headerTitle);
   }
 }
 
@@ -134,11 +131,7 @@ class HeaderBottomDivider extends StatelessWidget
   Widget build(BuildContext context) {
     return const PreferredSize(
       preferredSize: Size.fromHeight(height),
-      child: Divider(
-        height: 1,
-        thickness: 1,
-        color: RecallColors.neutral200,
-      ),
+      child: Divider(height: 1, thickness: 1, color: RecallColors.neutral200),
     );
   }
 

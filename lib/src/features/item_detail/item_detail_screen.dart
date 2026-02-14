@@ -240,7 +240,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         if (mounted) {
           setState(() => _isUpdating = false);
         }
-        _showMutationError(message: 'Failed to delete item: $e', onRetry: _deleteItem);
+        _showMutationError(
+          message: 'Failed to delete item: $e',
+          onRetry: _deleteItem,
+        );
       }
     }
   }
@@ -342,7 +345,11 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, thickness: 1, color: RecallColors.neutral200),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: RecallColors.neutral200,
+          ),
         ),
       ),
       body: itemAsync.when(
@@ -462,7 +469,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: RecallColors.neutral100),
               ),
-              child: Text(collectionLabel, style: RecallTextStyles.detailSectionValue),
+              child: Text(
+                collectionLabel,
+                style: RecallTextStyles.detailSectionValue,
+              ),
             ),
           ),
 
@@ -476,7 +486,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
             children: [
               ...item.tags.map(
                 (tag) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: RecallColors.tagGreenBg,
                     borderRadius: BorderRadius.circular(999),
@@ -521,10 +534,17 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ),
 
           const SizedBox(height: 24),
-          const Divider(height: 1, thickness: 1, color: RecallColors.neutral100),
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: RecallColors.neutral100,
+          ),
           const SizedBox(height: 20),
 
-          const Text('Personal Notes', style: RecallTextStyles.detailNotesLabel),
+          const Text(
+            'Personal Notes',
+            style: RecallTextStyles.detailNotesLabel,
+          ),
           const SizedBox(height: 8),
           Container(
             height: 128,
@@ -627,7 +647,10 @@ class _TagEditSheetState extends State<TagEditSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Edit Tags', style: RecallTextStyles.headerTitle),
+                    const Text(
+                      'Edit Tags',
+                      style: RecallTextStyles.headerTitle,
+                    ),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close, size: 20),
@@ -636,13 +659,18 @@ class _TagEditSheetState extends State<TagEditSheet> {
                   ],
                 ),
               ),
-              const Divider(height: 1, thickness: 1, color: RecallColors.neutral100),
+              const Divider(
+                height: 1,
+                thickness: 1,
+                color: RecallColors.neutral100,
+              ),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                   child: TagPicker(
                     selectedTags: _selectedTags,
-                    onTagsChanged: (tags) => setState(() => _selectedTags = tags),
+                    onTagsChanged: (tags) =>
+                        setState(() => _selectedTags = tags),
                   ),
                 ),
               ),
@@ -655,7 +683,9 @@ class _TagEditSheetState extends State<TagEditSheet> {
                         onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(40),
-                          side: const BorderSide(color: RecallColors.neutral200),
+                          side: const BorderSide(
+                            color: RecallColors.neutral200,
+                          ),
                           foregroundColor: RecallColors.neutral600,
                         ),
                         child: const Text('Cancel'),
@@ -664,7 +694,8 @@ class _TagEditSheetState extends State<TagEditSheet> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: FilledButton(
-                        onPressed: () => Navigator.of(context).pop(_selectedTags),
+                        onPressed: () =>
+                            Navigator.of(context).pop(_selectedTags),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(40),
                           backgroundColor: RecallColors.neutral900,

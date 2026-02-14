@@ -164,9 +164,8 @@ class _TagPickerState extends ConsumerState<TagPicker> {
                           labelText: 'Create new tag',
                           hintText: 'Enter tag name',
                           labelStyle: RecallTextStyles.itemMeta,
-                          hintStyle: RecallTextStyles.detailSectionValue.copyWith(
-                            color: RecallColors.neutral400,
-                          ),
+                          hintStyle: RecallTextStyles.detailSectionValue
+                              .copyWith(color: RecallColors.neutral400),
                           filled: true,
                           fillColor: RecallColors.neutral050,
                           border: OutlineInputBorder(

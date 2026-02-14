@@ -77,7 +77,7 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
       await apiClient.createItem(
         url: _urlController.text.trim(),
         collectionId: _selectedCollectionId,
-        tagIds: _selectedTags.map((tag) => tag.id).toList(),
+        tagIds: _selectedTags.map((tag) => tag.name).toList(),
       );
 
       if (mounted) {

@@ -59,7 +59,7 @@ class ItemDetailNotifier extends Notifier<void> {
     final apiClient = ref.read(apiClientProvider);
     final updatedItem = await apiClient.updateItem(
       itemId,
-      tagIds: tags.map((t) => t.id).toList(),
+      tagIds: tags.map((t) => t.name).toList(),
     );
 
     // Invalidate the item detail provider to refresh

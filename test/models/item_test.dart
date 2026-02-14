@@ -29,8 +29,7 @@ void main() {
   });
 
   test('Item.fromJson parses tags when they are strings', () {
-    final json = baseItemJson()
-      ..['tags'] = ['work', 'personal'];
+    final json = baseItemJson()..['tags'] = ['work', 'personal'];
 
     final item = Item.fromJson(json);
 

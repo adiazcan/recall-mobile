@@ -182,6 +182,9 @@
 - [X] T054 Remove or gate existing ApiScreen behind dev-only flag (not part of production nav) in lib/src/features/api/api_screen.dart and lib/src/app/router.dart
 - [X] T055 Run dart format, flutter analyze, flutter test and fix any issues
 - [X] T056 Validate full user journey: sign in → browse inbox → filter → view detail → favorite → archive → edit tags → move collection → save URL → share sheet → collections CRUD → sign out
+- [X] T057 Fix tag parsing crash when backend returns null tag fields while loading or creating tags in lib/src/models/tag.dart and lib/src/network/api_client.dart
+- [X] T058 Fix item tag update 400 by adding backend-compatible retry payloads and resilient tag creation response parsing in lib/src/network/api_client.dart
+- [X] T059 Fix tag creation/update contract mismatch for live API (no POST /tags, use tags:string[]) in lib/src/network/api_client.dart, lib/src/features/item_detail/item_detail_providers.dart, and lib/src/features/save_url/save_url_screen.dart
 
 ---
 
