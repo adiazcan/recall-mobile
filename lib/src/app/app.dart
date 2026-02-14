@@ -107,19 +107,21 @@ class _RecallAppState extends ConsumerState<RecallApp>
 
   /// Check shared UserDefaults for URLs saved by the Share Extension.
   /// The extension stores pending URLs in group.com.recall.mobile UserDefaults
-  /// under the key "pendingSharedURLs". We read them, process the first one,
-  /// and clear the list.
+  /// under the key "pendingSharedURLs". We read them, process all of them,
+  /// and then clear the list.
   Future<void> _checkPendingSharedUrls() async {
     try {
       final result = await _pendingUrlsChannel.invokeMethod<List<dynamic>>(
         'getPendingUrls',
       );
       if (result != null && result.isNotEmpty) {
-        // Process the first pending URL
-        final url = result.first as String;
-        debugPrint('[Share] Found pending URL from extension: $url');
-        _handleSharedUrl(url);
-        // Clear after reading
+        // Process all pending URLs
+        final urls = result.whereType<String>().toList();
+        for (final url in urls) {
+          debugPrint('[Share] Found pending URL from extension: $url');
+          _handleSharedUrl(url);
+        }
+        // Clear after processing all
         await _pendingUrlsChannel.invokeMethod<void>('clearPendingUrls');
       }
     } on MissingPluginException {
@@ -138,7 +140,7 @@ class _RecallAppState extends ConsumerState<RecallApp>
       final config = ref.read(appConfigProvider);
       final token = await tokenStore.getToken();
       debugPrint(
-        '[Share] _syncAuthConfigToExtension: token=${token != null ? "present (${token.length} chars)" : "NULL"}, apiBaseUrl=${config.apiBaseUrl}',
+        '[Share] _syncAuthConfigToExtension: token=${token != null ? "present" : "NULL"}, apiBaseUrl=${config.apiBaseUrl}',
       );
       if (token != null) {
         await _pendingUrlsChannel.invokeMethod<void>('syncAuthConfig', {

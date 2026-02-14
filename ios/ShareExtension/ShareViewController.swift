@@ -191,7 +191,7 @@ class ShareViewController: UIViewController {
         let apiBaseUrl = defaults?.string(forKey: "shareExtensionApiBaseUrl")
 
         NSLog("[ShareExtension] Token present: %@, API URL: %@",
-              accessToken != nil ? "YES (\(accessToken!.prefix(20))...)" : "NO",
+              accessToken != nil ? "YES" : "NO",
               apiBaseUrl ?? "nil")
 
         if let token = accessToken, !token.isEmpty,
