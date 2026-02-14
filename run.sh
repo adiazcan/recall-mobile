@@ -63,7 +63,9 @@ while IFS= read -r line || [ -n "$line" ]; do
         key="${key%"${key##*[![:space:]]}"}"
         
         # Strip inline comments (anything after # that's not in quotes)
-        # This is a simple approach - doesn't handle # inside quoted strings
+        # Note: This is a simple approach that doesn't handle # characters
+        # inside quoted strings. If you need FOO="bar#baz", avoid inline comments
+        # or move the comment to a separate line.
         value="${value%%#*}"
         
         # Trim trailing whitespace from value

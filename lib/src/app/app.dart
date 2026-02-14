@@ -107,7 +107,7 @@ class _RecallAppState extends ConsumerState<RecallApp>
 
   /// Check shared UserDefaults for URLs saved by the Share Extension.
   /// The extension stores pending URLs in group.com.recall.mobile UserDefaults
-  /// under the key "pendingSharedURLs". We read them, process all of them,
+  /// under the key "pendingSharedURLs". We read them, process all URLs,
   /// and then clear the list.
   Future<void> _checkPendingSharedUrls() async {
     try {
