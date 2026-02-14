@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:recall/src/app/app.dart';
@@ -83,7 +84,10 @@ void main() {
     // Verify we're on the inbox screen (which is the default authenticated route)
     expect(find.text('Inbox'), findsWidgets);
 
-    // Verify bottom navigation is present
+    // Open drawer and verify navigation entries
+    await tester.tap(find.byIcon(Icons.menu).first);
+    await tester.pump();
+
     expect(find.text('Collections'), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);
   });

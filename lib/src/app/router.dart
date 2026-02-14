@@ -93,7 +93,10 @@ GoRouter createRouter(Ref ref) {
       ),
       ShellRoute(
         builder: (BuildContext context, GoRouterState state, Widget child) {
-          return HomeScreen(child: child);
+          return HomeScreen(
+            showApiRoute: config.env == AppEnvironment.dev,
+            child: child,
+          );
         },
         routes: [
           GoRoute(

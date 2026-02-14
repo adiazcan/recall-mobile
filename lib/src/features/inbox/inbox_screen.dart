@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../home/home_screen.dart';
+import '../shared/app_header.dart';
+import '../shared/design_tokens.dart';
 import '../shared/empty_state.dart';
 import '../shared/error_view.dart';
 import 'inbox_providers.dart';
@@ -42,24 +45,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   @override
   Widget build(BuildContext context) {
     final inboxState = ref.watch(inboxProvider);
+    final itemCount = inboxState.maybeWhen(
+      data: (state) => state.items.length,
+      orElse: () => 0,
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inbox'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _showFilterBar ? Icons.filter_alt : Icons.filter_alt_outlined,
-            ),
-            onPressed: () {
-              setState(() {
-                _showFilterBar = !_showFilterBar;
-              });
-            },
-            tooltip: 'Filters',
-          ),
-        ],
-      ),
+      appBar: _buildInboxAppBar(itemCount),
       body: Column(
         children: [
           // Filter bar
@@ -78,6 +70,49 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildInboxAppBar(int itemCount) {
+    return RecallAppBar(
+      onMenuPressed: () => HomeScreen.scaffoldKey.currentState?.openDrawer(),
+      title: Row(
+        children: [
+          const Text(
+            'Inbox',
+            style: RecallTextStyles.headerTitle,
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: const BoxDecoration(
+              color: RecallColors.neutral100,
+              borderRadius: BorderRadius.all(Radius.circular(999)),
+            ),
+            child: Text(
+              '$itemCount',
+              style: RecallTextStyles.headerCount,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        HeaderIconAction(
+          onPressed: () {},
+          icon: Icons.search,
+          tooltip: 'Search',
+        ),
+        HeaderIconAction(
+          onPressed: () {
+            setState(() {
+              _showFilterBar = !_showFilterBar;
+            });
+          },
+          icon: _showFilterBar ? Icons.filter_alt : Icons.filter_alt_outlined,
+          tooltip: 'Filters',
+        ),
+        HeaderAddButton(onTap: () => context.push('/save')),
+      ],
     );
   }
 

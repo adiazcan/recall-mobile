@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/collection.dart';
+import '../home/home_screen.dart';
+import '../shared/app_header.dart';
 import '../inbox/inbox_providers.dart';
 import '../shared/empty_state.dart';
 import '../shared/error_view.dart';
@@ -16,14 +18,11 @@ class CollectionsScreen extends ConsumerWidget {
     final collectionsAsync = ref.watch(collectionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Collections'),
+      appBar: RecallAppBar(
+        onMenuPressed: () => HomeScreen.scaffoldKey.currentState?.openDrawer(),
+        title: const HeaderTitle('Collections'),
         actions: [
-          IconButton(
-            onPressed: () => _showCreateDialog(context, ref),
-            icon: const Icon(Icons.add),
-            tooltip: 'New collection',
-          ),
+          HeaderAddButton(onTap: () => _showCreateDialog(context, ref)),
         ],
       ),
       body: collectionsAsync.when(
