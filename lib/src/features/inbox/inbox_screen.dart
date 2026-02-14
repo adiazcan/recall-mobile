@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/providers.dart';
+import '../../models/collection.dart';
+import '../../models/tag.dart';
+import '../collections/collections_providers.dart';
 import '../home/home_screen.dart';
 import '../shared/app_header.dart';
 import '../shared/design_tokens.dart';
@@ -66,7 +70,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
   Future<void> _syncRouteFilters() async {
     final notifier = ref.read(inboxProvider.notifier);
-    final currentFilters = ref.read(inboxProvider).valueOrNull?.filters;
+    final currentFilters = ref.read(inboxProvider).asData?.value.filters;
 
     final targetFilters = _buildRouteFilters();
     if (currentFilters != null && _sameFilters(currentFilters, targetFilters)) {
@@ -109,13 +113,16 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   @override
   Widget build(BuildContext context) {
     final inboxState = ref.watch(inboxProvider);
+    final collectionsState = ref.watch(collectionsProvider);
+    final tagsState = ref.watch(tagsProvider);
     final itemCount = inboxState.maybeWhen(
       data: (state) => state.items.length,
       orElse: () => 0,
     );
+    final headerTitle = _resolveHeaderTitle(collectionsState, tagsState);
 
     return Scaffold(
-      appBar: _buildInboxAppBar(itemCount),
+      appBar: _buildInboxAppBar(headerTitle, itemCount),
       body: Column(
         children: [
           // Filter bar
@@ -137,12 +144,50 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     );
   }
 
-  PreferredSizeWidget _buildInboxAppBar(int itemCount) {
+  String _resolveHeaderTitle(
+    AsyncValue<List<Collection>> collectionsState,
+    AsyncValue<List<Tag>> tagsState,
+  ) {
+    if (widget.collectionId != null && widget.collectionId!.isNotEmpty) {
+      final collections = collectionsState.asData?.value;
+      if (collections != null) {
+        for (final collection in collections) {
+          if (collection.id == widget.collectionId) {
+            return collection.name;
+          }
+        }
+      }
+      return 'Collection';
+    }
+
+    if (widget.tagId != null && widget.tagId!.isNotEmpty) {
+      final tags = tagsState.asData?.value;
+      if (tags != null) {
+        for (final tag in tags) {
+          if (tag.id == widget.tagId) {
+            return '#${tag.name}';
+          }
+        }
+      }
+      return 'Tag';
+    }
+
+    switch (widget.viewFilter) {
+      case InboxViewFilter.favorites:
+        return 'Favorites';
+      case InboxViewFilter.archive:
+        return 'Archive';
+      case InboxViewFilter.inbox:
+        return 'Inbox';
+    }
+  }
+
+  PreferredSizeWidget _buildInboxAppBar(String title, int itemCount) {
     return RecallAppBar(
       onMenuPressed: () => HomeScreen.scaffoldKey.currentState?.openDrawer(),
       title: Row(
         children: [
-          const Text('Inbox', style: RecallTextStyles.headerTitle),
+          Text(title, style: RecallTextStyles.headerTitle),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -175,7 +220,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   Widget _buildFilterBar() {
-    final state = ref.watch(inboxProvider).valueOrNull;
+    final state = ref.watch(inboxProvider).asData?.value;
     if (state == null) return const SizedBox.shrink();
 
     final filters = state.filters;
@@ -238,7 +283,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onSelected: (selected) {
         final notifier = ref.read(inboxProvider.notifier);
         final currentFilters =
-            ref.read(inboxProvider).valueOrNull?.filters ??
+          ref.read(inboxProvider).asData?.value.filters ??
             const InboxFilters();
 
         String? newStatus;
@@ -265,7 +310,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onSelected: (selected) {
         final notifier = ref.read(inboxProvider.notifier);
         final currentFilters =
-            ref.read(inboxProvider).valueOrNull?.filters ??
+          ref.read(inboxProvider).asData?.value.filters ??
             const InboxFilters();
 
         notifier.updateFilters(

@@ -20,10 +20,14 @@ class AppDrawer extends ConsumerWidget {
     final collectionsState = ref.watch(collectionsProvider);
     final tagsState = ref.watch(tagsProvider);
 
-    final inboxCount = inboxState.maybeWhen(
+    final activeFilterCount = inboxState.maybeWhen(
       data: (state) => state.items.length,
       orElse: () => 0,
     );
+
+    final isInboxSelected = currentPath == '/inbox';
+    final isFavoritesSelected = currentPath == '/favorites';
+    final isArchiveSelected = currentPath == '/archive';
 
     return Drawer(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -53,20 +57,28 @@ class AppDrawer extends ConsumerWidget {
                     _NavItem(
                       icon: Icons.inbox_outlined,
                       label: 'Inbox',
-                      count: inboxCount > 0 ? '$inboxCount' : null,
-                      selected: currentPath == '/inbox',
+                      count: isInboxSelected && activeFilterCount > 0
+                          ? '$activeFilterCount'
+                          : null,
+                      selected: isInboxSelected,
                       onTap: () => _go(context, '/inbox'),
                     ),
                     _NavItem(
                       icon: Icons.star_outline,
                       label: 'Favorites',
-                      selected: currentPath == '/favorites',
+                      count: isFavoritesSelected && activeFilterCount > 0
+                          ? '$activeFilterCount'
+                          : null,
+                      selected: isFavoritesSelected,
                       onTap: () => _go(context, '/favorites'),
                     ),
                     _NavItem(
                       icon: Icons.archive_outlined,
                       label: 'Archive',
-                      selected: currentPath == '/archive',
+                      count: isArchiveSelected && activeFilterCount > 0
+                          ? '$activeFilterCount'
+                          : null,
+                      selected: isArchiveSelected,
                       onTap: () => _go(context, '/archive'),
                     ),
                     const SizedBox(height: 28),
@@ -75,11 +87,15 @@ class AppDrawer extends ConsumerWidget {
                       onAdd: () => _showCreateCollectionDialog(context, ref),
                     ),
                     const SizedBox(height: 8),
-                    ..._buildCollectionItems(context, collectionsState),
+                    ..._buildCollectionItems(
+                      context,
+                      collectionsState,
+                      activeFilterCount,
+                    ),
                     const SizedBox(height: 28),
                     const _SectionHeader(title: 'Tags'),
                     const SizedBox(height: 8),
-                    ..._buildTagItems(context, tagsState),
+                    ..._buildTagItems(context, tagsState, activeFilterCount),
                   ],
                 ),
               ),
@@ -125,6 +141,7 @@ class AppDrawer extends ConsumerWidget {
   List<Widget> _buildCollectionItems(
     BuildContext context,
     AsyncValue<List<Collection>> collectionsState,
+    int activeFilterCount,
   ) {
     return collectionsState.when(
       data: (collections) {
@@ -134,15 +151,20 @@ class AppDrawer extends ConsumerWidget {
 
         return collections
             .map(
-              (collection) => _NavItem(
-                icon: Icons.folder_outlined,
-                label: collection.name,
-                count: collection.itemCount > 0
-                    ? '${collection.itemCount}'
-                    : null,
-                selected: currentPath == '/collections/${collection.id}',
-                onTap: () => _go(context, '/collections/${collection.id}'),
-              ),
+              (collection) {
+                final selected = currentPath == '/collections/${collection.id}';
+                final count = selected
+                    ? activeFilterCount
+                    : collection.itemCount;
+
+                return _NavItem(
+                  icon: Icons.folder_outlined,
+                  label: collection.name,
+                  count: count > 0 ? '$count' : null,
+                  selected: selected,
+                  onTap: () => _go(context, '/collections/${collection.id}'),
+                );
+              },
             )
             .toList();
       },
@@ -154,6 +176,7 @@ class AppDrawer extends ConsumerWidget {
   List<Widget> _buildTagItems(
     BuildContext context,
     AsyncValue<List<Tag>> tagsState,
+    int activeFilterCount,
   ) {
     return tagsState.when(
       data: (tags) {
@@ -163,15 +186,18 @@ class AppDrawer extends ConsumerWidget {
 
         return tags
             .map(
-              (tag) => _TagNavItem(
-                label: tag.name,
-                count: tag.itemCount,
-                selected: currentPath == '/tags/${tag.id}',
-                onTap: () => _go(
-                  context,
-                  '/tags/${Uri.encodeComponent(tag.id)}',
-                ),
-              ),
+              (tag) {
+                final selected = currentPath == '/tags/${tag.id}';
+                return _TagNavItem(
+                  label: tag.name,
+                  count: selected ? activeFilterCount : tag.itemCount,
+                  selected: selected,
+                  onTap: () => _go(
+                    context,
+                    '/tags/${Uri.encodeComponent(tag.id)}',
+                  ),
+                );
+              },
             )
             .toList();
       },
