@@ -84,8 +84,12 @@ void main() {
     // Verify we're on the inbox screen (which is the default authenticated route)
     expect(find.text('Inbox'), findsWidgets);
 
-    // Open drawer and verify navigation entries
-    await tester.tap(find.byIcon(Icons.menu).first);
+    // Open drawer without tapping the menu icon to avoid shader-based splash
+    // effects that can fail in widget tests on newer Flutter versions.
+    final scaffoldState = tester.firstState<ScaffoldState>(
+      find.byType(Scaffold),
+    );
+    scaffoldState.openDrawer();
     await tester.pump();
 
     expect(find.text('Recall'), findsOneWidget);

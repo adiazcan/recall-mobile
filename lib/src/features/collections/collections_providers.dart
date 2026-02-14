@@ -50,7 +50,7 @@ class CollectionsNotifier extends AsyncNotifier<List<Collection>> {
       final collections = await _fetchCollections();
       state = AsyncValue.data(collections);
     } catch (error, stackTrace) {
-      final current = state.valueOrNull;
+      final current = state.asData?.value;
       if (current == null || current.isEmpty) {
         state = AsyncValue.error(error, stackTrace);
       }
@@ -61,7 +61,7 @@ class CollectionsNotifier extends AsyncNotifier<List<Collection>> {
     final name = rawName.trim();
     _validateName(name);
 
-    final currentCollections = state.valueOrNull ?? <Collection>[];
+    final currentCollections = state.asData?.value ?? <Collection>[];
     _ensureUniqueName(name, currentCollections);
 
     final apiClient = ref.read(apiClientProvider);
@@ -78,7 +78,7 @@ class CollectionsNotifier extends AsyncNotifier<List<Collection>> {
     final name = rawName.trim();
     _validateName(name);
 
-    final currentCollections = state.valueOrNull ?? <Collection>[];
+    final currentCollections = state.asData?.value ?? <Collection>[];
     _ensureUniqueName(name, currentCollections, ignoreId: id);
 
     final apiClient = ref.read(apiClientProvider);
@@ -100,7 +100,7 @@ class CollectionsNotifier extends AsyncNotifier<List<Collection>> {
   }
 
   Future<void> deleteCollection(String id) async {
-    final currentCollections = state.valueOrNull ?? <Collection>[];
+    final currentCollections = state.asData?.value ?? <Collection>[];
 
     final apiClient = ref.read(apiClientProvider);
     await apiClient.deleteCollection(id);

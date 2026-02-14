@@ -140,15 +140,14 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 /// Provider for handling shared URLs from external apps
-final sharedUrlProvider = StateNotifierProvider<SharedUrlNotifier, String?>((
-  ref,
-) {
-  return SharedUrlNotifier();
-});
+final sharedUrlProvider = NotifierProvider<SharedUrlNotifier, String?>(
+  SharedUrlNotifier.new,
+);
 
 /// Notifier for managing shared URL state
-class SharedUrlNotifier extends StateNotifier<String?> {
-  SharedUrlNotifier() : super(null);
+class SharedUrlNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
 
   void setSharedUrl(String url) {
     state = url;

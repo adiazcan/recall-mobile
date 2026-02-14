@@ -180,8 +180,11 @@ GoRouter createRouter(Ref ref) {
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Ref ref) {
-    ref.listen(authStateProvider, (previous, next) => notifyListeners());
-    ref.listen(sharedUrlProvider, (previous, next) {
+    ref.listen<AsyncValue<AuthState>>(
+      authStateProvider,
+      (previous, next) => notifyListeners(),
+    );
+    ref.listen<String?>(sharedUrlProvider, (previous, next) {
       // Notify router when a shared URL arrives
       if (next != null && next.isNotEmpty) {
         notifyListeners();
