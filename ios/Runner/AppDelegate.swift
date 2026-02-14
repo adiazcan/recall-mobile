@@ -3,23 +3,24 @@ import UIKit
 import MSAL
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
     // Register method channel for pending shared URLs from Share Extension
-    guard let registrar = self.registrar(forPlugin: "PendingUrlsChannel") else {
-      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-    }
     let pendingUrlsChannel = FlutterMethodChannel(
       name: "com.recall.mobile/pendingUrls",
-      binaryMessenger: registrar.messenger()
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
 
-    pendingUrlsChannel.setMethodCallHandler { [weak self] (call, result) in
+    pendingUrlsChannel.setMethodCallHandler { (call, result) in
       let appGroupId = Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String ?? "group.com.recall.mobile"
       let defaults = UserDefaults(suiteName: appGroupId)
 
@@ -48,13 +49,11 @@ import MSAL
         result(FlutterMethodNotImplemented)
       }
     }
-
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
     guard let sourceApplication = options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String else {
-      return false
+      return super.application(app, open: url, options: options)
     }
     return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: sourceApplication)
   }

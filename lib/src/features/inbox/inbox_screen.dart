@@ -283,7 +283,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onSelected: (selected) {
         final notifier = ref.read(inboxProvider.notifier);
         final currentFilters =
-          ref.read(inboxProvider).asData?.value.filters ??
+            ref.read(inboxProvider).asData?.value.filters ??
             const InboxFilters();
 
         String? newStatus;
@@ -310,7 +310,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onSelected: (selected) {
         final notifier = ref.read(inboxProvider.notifier);
         final currentFilters =
-          ref.read(inboxProvider).asData?.value.filters ??
+            ref.read(inboxProvider).asData?.value.filters ??
             const InboxFilters();
 
         notifier.updateFilters(

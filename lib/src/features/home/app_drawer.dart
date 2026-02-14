@@ -149,24 +149,18 @@ class AppDrawer extends ConsumerWidget {
           return const [_EmptyLabel(text: 'No collections yet')];
         }
 
-        return collections
-            .map(
-              (collection) {
-                final selected = currentPath == '/collections/${collection.id}';
-                final count = selected
-                    ? activeFilterCount
-                    : collection.itemCount;
+        return collections.map((collection) {
+          final selected = currentPath == '/collections/${collection.id}';
+          final count = selected ? activeFilterCount : collection.itemCount;
 
-                return _NavItem(
-                  icon: Icons.folder_outlined,
-                  label: collection.name,
-                  count: count > 0 ? '$count' : null,
-                  selected: selected,
-                  onTap: () => _go(context, '/collections/${collection.id}'),
-                );
-              },
-            )
-            .toList();
+          return _NavItem(
+            icon: Icons.folder_outlined,
+            label: collection.name,
+            count: count > 0 ? '$count' : null,
+            selected: selected,
+            onTap: () => _go(context, '/collections/${collection.id}'),
+          );
+        }).toList();
       },
       loading: () => const [_EmptyLabel(text: 'Loading collections...')],
       error: (_, _) => const [_EmptyLabel(text: 'Unable to load collections')],
@@ -184,22 +178,15 @@ class AppDrawer extends ConsumerWidget {
           return const [_EmptyLabel(text: 'No tags yet')];
         }
 
-        return tags
-            .map(
-              (tag) {
-                final selected = currentPath == '/tags/${tag.id}';
-                return _TagNavItem(
-                  label: tag.name,
-                  count: selected ? activeFilterCount : tag.itemCount,
-                  selected: selected,
-                  onTap: () => _go(
-                    context,
-                    '/tags/${Uri.encodeComponent(tag.id)}',
-                  ),
-                );
-              },
-            )
-            .toList();
+        return tags.map((tag) {
+          final selected = currentPath == '/tags/${tag.id}';
+          return _TagNavItem(
+            label: tag.name,
+            count: selected ? activeFilterCount : tag.itemCount,
+            selected: selected,
+            onTap: () => _go(context, '/tags/${Uri.encodeComponent(tag.id)}'),
+          );
+        }).toList();
       },
       loading: () => const [_EmptyLabel(text: 'Loading tags...')],
       error: (_, _) => const [_EmptyLabel(text: 'Unable to load tags')],
