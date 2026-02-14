@@ -93,16 +93,49 @@ GoRouter createRouter(Ref ref) {
       ),
       ShellRoute(
         builder: (BuildContext context, GoRouterState state, Widget child) {
-          return HomeScreen(
-            showApiRoute: config.env == AppEnvironment.dev,
-            child: child,
-          );
+          return HomeScreen(child: child);
         },
         routes: [
           GoRoute(
             path: '/inbox',
             builder: (BuildContext context, GoRouterState state) {
-              return const InboxScreen();
+              return InboxScreen(key: ValueKey(state.uri.toString()));
+            },
+          ),
+          GoRoute(
+            path: '/favorites',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                viewFilter: InboxViewFilter.favorites,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/archive',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                viewFilter: InboxViewFilter.archive,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/collections/:id',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                collectionId: state.pathParameters['id'],
+              );
+            },
+          ),
+          GoRoute(
+            path: '/tags/:id',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                tagId: state.pathParameters['id'],
+              );
             },
           ),
           GoRoute(

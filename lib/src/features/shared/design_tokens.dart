@@ -15,6 +15,49 @@ class RecallColors {
 }
 
 class RecallTextStyles {
+  static const drawerBrand = TextStyle(
+    fontSize: 20,
+    height: 1.4,
+    fontWeight: FontWeight.w700,
+    color: RecallColors.neutral900,
+  );
+
+  static const drawerSectionHeader = TextStyle(
+    fontSize: 12,
+    height: 1.33,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.6,
+    color: RecallColors.neutral400,
+  );
+
+  static const drawerItem = TextStyle(
+    fontSize: 14,
+    height: 1.43,
+    fontWeight: FontWeight.w500,
+    color: RecallColors.neutral600,
+  );
+
+  static const drawerItemSelected = TextStyle(
+    fontSize: 14,
+    height: 1.43,
+    fontWeight: FontWeight.w500,
+    color: RecallColors.neutral900,
+  );
+
+  static const drawerCount = TextStyle(
+    fontSize: 12,
+    height: 1.33,
+    fontWeight: FontWeight.w400,
+    color: RecallColors.neutral400,
+  );
+
+  static const drawerAvatar = TextStyle(
+    fontSize: 12,
+    height: 1.33,
+    fontWeight: FontWeight.w500,
+    color: RecallColors.neutral600,
+  );
+
   static const headerTitle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,

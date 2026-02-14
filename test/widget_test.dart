@@ -88,7 +88,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.menu).first);
     await tester.pump();
 
-    expect(find.text('Collections'), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Recall'), findsOneWidget);
+    expect(find.text('Favorites'), findsOneWidget);
+    expect(find.text('Archive'), findsOneWidget);
+    expect(find.text('COLLECTIONS'), findsOneWidget);
+    expect(find.text('TAGS'), findsOneWidget);
   });
 }

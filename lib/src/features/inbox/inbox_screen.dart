@@ -10,8 +10,19 @@ import '../shared/error_view.dart';
 import 'inbox_providers.dart';
 import 'item_card.dart';
 
+enum InboxViewFilter { inbox, favorites, archive }
+
 class InboxScreen extends ConsumerStatefulWidget {
-  const InboxScreen({super.key});
+  const InboxScreen({
+    super.key,
+    this.viewFilter = InboxViewFilter.inbox,
+    this.collectionId,
+    this.tagId,
+  });
+
+  final InboxViewFilter viewFilter;
+  final String? collectionId;
+  final String? tagId;
 
   @override
   ConsumerState<InboxScreen> createState() => _InboxScreenState();
@@ -25,6 +36,17 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    Future<void>.microtask(_syncRouteFilters);
+  }
+
+  @override
+  void didUpdateWidget(covariant InboxScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewFilter != widget.viewFilter ||
+        oldWidget.collectionId != widget.collectionId ||
+        oldWidget.tagId != widget.tagId) {
+      Future<void>.microtask(_syncRouteFilters);
+    }
   }
 
   @override
@@ -40,6 +62,48 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       // Load more when reaching 90% of scroll
       ref.read(inboxProvider.notifier).loadMore();
     }
+  }
+
+  Future<void> _syncRouteFilters() async {
+    final notifier = ref.read(inboxProvider.notifier);
+    final currentFilters = ref.read(inboxProvider).valueOrNull?.filters;
+
+    final targetFilters = _buildRouteFilters();
+    if (currentFilters != null && _sameFilters(currentFilters, targetFilters)) {
+      return;
+    }
+
+    await notifier.updateFilters(targetFilters);
+  }
+
+  InboxFilters _buildRouteFilters() {
+    if (widget.collectionId != null && widget.collectionId!.isNotEmpty) {
+      return InboxFilters(collectionId: widget.collectionId);
+    }
+
+    if (widget.tagId != null && widget.tagId!.isNotEmpty) {
+      return InboxFilters(tagIds: [widget.tagId!]);
+    }
+
+    switch (widget.viewFilter) {
+      case InboxViewFilter.favorites:
+        return const InboxFilters(isFavorite: true);
+      case InboxViewFilter.archive:
+        return const InboxFilters(status: 'archived');
+      case InboxViewFilter.inbox:
+        return const InboxFilters();
+    }
+  }
+
+  bool _sameFilters(InboxFilters left, InboxFilters right) {
+    final leftTags = left.tagIds ?? const <String>[];
+    final rightTags = right.tagIds ?? const <String>[];
+
+    return left.status == right.status &&
+        left.isFavorite == right.isFavorite &&
+        left.collectionId == right.collectionId &&
+        leftTags.length == rightTags.length &&
+        leftTags.every(rightTags.contains);
   }
 
   @override
@@ -78,10 +142,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onMenuPressed: () => HomeScreen.scaffoldKey.currentState?.openDrawer(),
       title: Row(
         children: [
-          const Text(
-            'Inbox',
-            style: RecallTextStyles.headerTitle,
-          ),
+          const Text('Inbox', style: RecallTextStyles.headerTitle),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -89,10 +150,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               color: RecallColors.neutral100,
               borderRadius: BorderRadius.all(Radius.circular(999)),
             ),
-            child: Text(
-              '$itemCount',
-              style: RecallTextStyles.headerCount,
-            ),
+            child: Text('$itemCount', style: RecallTextStyles.headerCount),
           ),
         ],
       ),

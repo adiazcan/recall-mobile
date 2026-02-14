@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../models/collection.dart';
 import '../home/home_screen.dart';
 import '../shared/app_header.dart';
-import '../inbox/inbox_providers.dart';
 import '../shared/empty_state.dart';
 import '../shared/error_view.dart';
 import 'collections_providers.dart';
@@ -220,11 +219,8 @@ class _CollectionListTile extends ConsumerWidget {
         ],
       ),
       onTap: () async {
-        await ref
-            .read(inboxProvider.notifier)
-            .updateFilters(InboxFilters(collectionId: collection.id));
         if (context.mounted) {
-          context.go('/inbox');
+          context.go('/collections/${collection.id}');
         }
       },
     );
