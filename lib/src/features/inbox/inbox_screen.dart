@@ -204,31 +204,47 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
     return RefreshIndicator(
       onRefresh: () => ref.read(inboxProvider.notifier).refresh(),
-      child: ListView.builder(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: state.items.length + (state.hasMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == state.items.length) {
-            // Loading indicator at the bottom
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: state.isLoadingMore
-                    ? const CircularProgressIndicator()
-                    : const SizedBox.shrink(),
-              ),
-            );
-          }
+      child: Column(
+        children: [
+          if (state.backgroundError != null)
+            MaterialBanner(
+              content: Text(state.backgroundError!),
+              actions: [
+                TextButton(
+                  onPressed: () => ref.read(inboxProvider.notifier).refresh(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: state.items.length + (state.hasMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == state.items.length) {
+                  // Loading indicator at the bottom
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: state.isLoadingMore
+                          ? const CircularProgressIndicator()
+                          : const SizedBox.shrink(),
+                    ),
+                  );
+                }
 
-          final item = state.items[index];
-          return ItemCard(
-            item: item,
-            onTap: () {
-              context.push('/item/${item.id}');
-            },
-          );
-        },
+                final item = state.items[index];
+                return ItemCard(
+                  item: item,
+                  onTap: () {
+                    context.push('/item/${item.id}');
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

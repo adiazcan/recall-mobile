@@ -14,9 +14,14 @@ All Flutter commands must use FVM (`fvm flutter ...`).
 # Setup
 fvm install && fvm flutter pub get
 
-# Run (dev has hardcoded defaults; staging/prod require --dart-define URLs)
+# Run using .env files (recommended - see ENVIRONMENT.md)
+./run.sh dev      # uses .env.dev
+./run.sh staging  # uses .env.staging
+./run.sh prod     # uses .env.prod
+
+# Run manually with --dart-define (alternative)
 fvm flutter run -t lib/main_dev.dart
-fvm flutter run -t lib/main_staging.dart --dart-define=API_BASE_URL=... --dart-define=OPENAPI_SPEC_URL=...
+fvm flutter run -t lib/main_staging.dart --dart-define=API_BASE_URL=... --dart-define=OPENAPI_SPEC_URL=... --dart-define=ENTRA_CLIENT_ID=... --dart-define=ENTRA_TENANT_ID=...
 
 # Quality checks (CI runs all three on every PR)
 dart format --set-exit-if-changed .
@@ -26,6 +31,12 @@ fvm flutter test
 # Run a single test file
 fvm flutter test test/config/app_config_test.dart
 ```
+
+## Configuration
+
+**Environment files** (`.env.dev`, `.env.staging`, `.env.prod`): Store configuration including Entra ID credentials, API URLs, and feature flags. These files are gitignored. Use `.env.example` as a template. See [ENVIRONMENT.md](ENVIRONMENT.md) for detailed setup instructions.
+
+**Runtime configuration**: `AppConfig.fromDartDefines()` reads `--dart-define` values (automatically populated from .env files by `run.sh` script). Required values: `ENTRA_CLIENT_ID`, `ENTRA_TENANT_ID`, `ENTRA_SCOPES`, `ENTRA_REDIRECT_URI`, `API_BASE_URL`, `OPENAPI_SPEC_URL`. Optional: `LOG_HTTP` (boolean).
 
 ## Architecture
 

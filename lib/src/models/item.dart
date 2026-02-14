@@ -49,16 +49,18 @@ class Item {
     return Item(
       id: json['id'] as String,
       url: json['url'] as String,
-      title: json['title'] as String,
+      title: (json['title'] as String?) ?? 'Untitled',
       excerpt: json['excerpt'] as String?,
-      domain: json['domain'] as String,
+      domain: (json['domain'] as String?) ?? '',
       previewImageUrl: json['previewImageUrl'] as String?,
-      status: ItemStatus.fromJson(json['status'] as String),
-      isFavorite: json['isFavorite'] as bool,
+      status: ItemStatus.fromJson((json['status'] as String?) ?? 'unread'),
+      isFavorite: (json['isFavorite'] as bool?) ?? false,
       collectionId: json['collectionId'] as String?,
-      tags: (json['tags'] as List<dynamic>)
-          .map((t) => Tag.fromJson(t as Map<String, dynamic>))
-          .toList(),
+      tags:
+          (json['tags'] as List<dynamic>?)
+              ?.map((t) => Tag.fromJson(t as Map<String, dynamic>))
+              .toList() ??
+          [],
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );

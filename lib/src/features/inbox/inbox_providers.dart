@@ -49,6 +49,7 @@ class InboxState {
     this.nextCursor,
     required this.hasMore,
     required this.isLoadingMore,
+    this.backgroundError,
   });
 
   final List<Item> items;
@@ -56,6 +57,7 @@ class InboxState {
   final String? nextCursor;
   final bool hasMore;
   final bool isLoadingMore;
+  final String? backgroundError;
 
   InboxState copyWith({
     List<Item>? items,
@@ -63,6 +65,7 @@ class InboxState {
     String? Function()? nextCursor,
     bool? hasMore,
     bool? isLoadingMore,
+    String? Function()? backgroundError,
   }) {
     return InboxState(
       items: items ?? this.items,
@@ -70,6 +73,9 @@ class InboxState {
       nextCursor: nextCursor != null ? nextCursor() : this.nextCursor,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      backgroundError: backgroundError != null
+          ? backgroundError()
+          : this.backgroundError,
     );
   }
 }
@@ -91,8 +97,9 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
       items: cachedItems,
       filters: const InboxFilters(),
       nextCursor: null,
-      hasMore: cachedItems.isEmpty, // Assume more if cache is empty
+      hasMore: true, // Optimistically assume there may be more items
       isLoadingMore: false,
+      backgroundError: null,
     );
 
     // Fetch fresh data in background
@@ -120,9 +127,16 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
         cursor: cursor,
       );
 
+      // Apply client-side filtering as a fallback in case the API
+      // does not honour filter query parameters.
+      final filteredItems = _applyLocalFilters(
+        response.items,
+        currentState.filters,
+      );
+
       final newItems = resetList
-          ? response.items
-          : [...currentState.items, ...response.items];
+          ? filteredItems
+          : [...currentState.items, ...filteredItems];
 
       // Cache the items (full list if reset, otherwise just append)
       if (resetList || currentState.items.isEmpty) {
@@ -139,14 +153,31 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
           nextCursor: () => response.nextCursor,
           hasMore: response.nextCursor != null,
           isLoadingMore: false,
+          backgroundError: () => null,
         ),
       );
     } catch (error, stackTrace) {
       if (resetList) {
-        state = AsyncValue.error(error, stackTrace);
+        if (currentState.items.isEmpty) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(
+            currentState.copyWith(
+              isLoadingMore: false,
+              backgroundError: () =>
+                  'Could not refresh items. Showing cached data.',
+            ),
+          );
+        }
       } else {
         // Keep current items on load-more error, just stop loading
-        state = AsyncValue.data(currentState.copyWith(isLoadingMore: false));
+        state = AsyncValue.data(
+          currentState.copyWith(
+            isLoadingMore: false,
+            backgroundError: () =>
+                'Could not load more items. Please try again.',
+          ),
+        );
       }
     }
   }
@@ -182,6 +213,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
         nextCursor: () => null,
         hasMore: true,
         isLoadingMore: false,
+        backgroundError: () => null,
       ),
     );
 
@@ -202,7 +234,43 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
       return item.id == updatedItem.id ? updatedItem : item;
     }).toList();
 
-    state = AsyncValue.data(currentState.copyWith(items: updatedItems));
+    // Re-apply filters so that toggling a favourite off removes the item
+    // when the favourites filter is active.
+    final filtered = _applyLocalFilters(updatedItems, currentState.filters);
+
+    state = AsyncValue.data(currentState.copyWith(items: filtered));
+  }
+
+  // Apply filters locally to a list of items.
+  // This acts as a safety net when the API does not filter server-side.
+  List<Item> _applyLocalFilters(List<Item> items, InboxFilters filters) {
+    var result = items;
+
+    if (filters.isFavorite == true) {
+      result = result.where((item) => item.isFavorite).toList();
+    }
+
+    if (filters.status != null) {
+      result = result
+          .where((item) => item.status.name == filters.status)
+          .toList();
+    }
+
+    if (filters.collectionId != null) {
+      result = result
+          .where((item) => item.collectionId == filters.collectionId)
+          .toList();
+    }
+
+    if (filters.tagIds != null && filters.tagIds!.isNotEmpty) {
+      final filterTagIds = filters.tagIds!.toSet();
+      result = result.where((item) {
+        final itemTagIds = item.tags.map((t) => t.id).toSet();
+        return filterTagIds.intersection(itemTagIds).isNotEmpty;
+      }).toList();
+    }
+
+    return result;
   }
 
   // Remove an item from the list (after deletion)

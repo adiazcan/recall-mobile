@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
+import '../auth/auth_state.dart';
 import 'providers.dart';
+
+/// MethodChannel for reading pending shared URLs from the native side
+const _pendingUrlsChannel = MethodChannel('com.recall.mobile/pendingUrls');
 
 class RecallApp extends ConsumerStatefulWidget {
   const RecallApp({super.key, this.configError});
@@ -15,19 +20,36 @@ class RecallApp extends ConsumerStatefulWidget {
   ConsumerState<RecallApp> createState() => _RecallAppState();
 }
 
-class _RecallAppState extends ConsumerState<RecallApp> {
+class _RecallAppState extends ConsumerState<RecallApp>
+    with WidgetsBindingObserver {
   StreamSubscription? _intentMediaStreamSubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initSharingIntent();
+    // Check for pending URLs from share extension on launch
+    _checkPendingSharedUrls();
+    // Sync auth config to extension so it can make API calls
+    _syncAuthConfigToExtension();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _intentMediaStreamSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Check for pending URLs every time the app comes to foreground
+      _checkPendingSharedUrls();
+      // Re-sync token in case it was refreshed
+      _syncAuthConfigToExtension();
+    }
   }
 
   void _initSharingIntent() {
@@ -83,8 +105,72 @@ class _RecallAppState extends ConsumerState<RecallApp> {
     ref.read(sharedUrlProvider.notifier).setSharedUrl(url);
   }
 
+  /// Check shared UserDefaults for URLs saved by the Share Extension.
+  /// The extension stores pending URLs in group.com.recall.mobile UserDefaults
+  /// under the key "pendingSharedURLs". We read them, process all URLs,
+  /// and then clear the list.
+  Future<void> _checkPendingSharedUrls() async {
+    try {
+      final result = await _pendingUrlsChannel.invokeMethod<List<dynamic>>(
+        'getPendingUrls',
+      );
+      if (result != null && result.isNotEmpty) {
+        // Process all pending URLs
+        final urls = result.whereType<String>().toList();
+        for (final url in urls) {
+          debugPrint('[Share] Found pending URL from extension: $url');
+          _handleSharedUrl(url);
+        }
+        // Clear after processing all
+        await _pendingUrlsChannel.invokeMethod<void>('clearPendingUrls');
+      }
+    } on MissingPluginException {
+      // Channel not implemented on this platform, ignore
+      debugPrint('[Share] Pending URLs channel not available');
+    } catch (e) {
+      debugPrint('[Share] Error checking pending URLs: $e');
+    }
+  }
+
+  /// Sync the current access token and API base URL to shared UserDefaults
+  /// so the Share Extension can make authenticated API calls directly.
+  Future<void> _syncAuthConfigToExtension() async {
+    try {
+      final tokenStore = ref.read(tokenStoreProvider);
+      final config = ref.read(appConfigProvider);
+      final token = await tokenStore.getToken();
+      debugPrint(
+        '[Share] _syncAuthConfigToExtension: token=${token != null ? "present" : "NULL"}, apiBaseUrl=${config.apiBaseUrl}',
+      );
+      if (token != null) {
+        await _pendingUrlsChannel.invokeMethod<void>('syncAuthConfig', {
+          'accessToken': token,
+          'apiBaseUrl': config.apiBaseUrl,
+        });
+        debugPrint('[Share] Synced auth config to extension successfully');
+      } else {
+        debugPrint('[Share] No token available — skipping sync');
+      }
+    } on MissingPluginException {
+      debugPrint('[Share] syncAuthConfig channel not available');
+    } catch (e) {
+      debugPrint('[Share] Error syncing auth config: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Sync auth config to share extension whenever auth state changes
+    ref.listen<AsyncValue<AuthState>>(authStateProvider, (prev, next) {
+      final status = next.valueOrNull?.status;
+      if (status == AuthStatus.authenticated) {
+        debugPrint(
+          '[Share] Auth state → authenticated, syncing token to extension',
+        );
+        _syncAuthConfigToExtension();
+      }
+    });
+
     if (widget.configError != null) {
       return MaterialApp(
         title: 'Recall',
@@ -97,6 +183,58 @@ class _RecallAppState extends ConsumerState<RecallApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
+      builder: (context, child) {
+        final networkStatusAsync = ref.watch(networkStatusProvider);
+        final isOffline = networkStatusAsync.maybeWhen(
+          data: (status) => status == NetworkStatus.offline,
+          orElse: () => false,
+        );
+
+        return Stack(
+          children: [
+            child ?? const SizedBox.shrink(),
+            if (isOffline)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.wifi_off,
+                            size: 16,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onErrorContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Offline mode: showing cached data',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
       routerConfig: ref.watch(routerProvider),
     );
   }

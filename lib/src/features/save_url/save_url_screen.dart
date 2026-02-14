@@ -4,17 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
-import '../../models/collection.dart';
 import '../../models/tag.dart';
+import '../collections/collections_providers.dart';
 import '../inbox/inbox_providers.dart';
 import '../shared/error_view.dart';
 import '../shared/tag_picker.dart';
-
-// Provider for collections list
-final collectionsProvider = FutureProvider<List<Collection>>((ref) async {
-  final apiClient = ref.watch(apiClientProvider);
-  return apiClient.getCollections();
-});
 
 class SaveUrlScreen extends ConsumerStatefulWidget {
   const SaveUrlScreen({super.key, this.prefilledUrl});
@@ -34,6 +28,7 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
   bool _isSaving = false;
   String? _errorMessage;
   String? _duplicateItemId;
+  _SaveMutationError? _mutationError;
 
   @override
   void initState() {
@@ -74,6 +69,7 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
       _isSaving = true;
       _errorMessage = null;
       _duplicateItemId = null;
+      _mutationError = null;
     });
 
     try {
@@ -115,13 +111,19 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
       } else {
         setState(() {
           _isSaving = false;
-          _errorMessage = 'Failed to save URL: ${e.message}';
+          _mutationError = _SaveMutationError(
+            message: 'Failed to save URL: ${e.message}',
+            onRetry: _saveUrl,
+          );
         });
       }
     } catch (e) {
       setState(() {
         _isSaving = false;
-        _errorMessage = 'Failed to save URL: $e';
+        _mutationError = _SaveMutationError(
+          message: 'Failed to save URL: $e',
+          onRetry: _saveUrl,
+        );
       });
     }
   }
@@ -266,6 +268,25 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
                   const SizedBox(height: 16),
                 ],
 
+                if (_mutationError != null) ...[
+                  ErrorView(
+                    message: _mutationError!.message,
+                    onRetry: _mutationError!.onRetry,
+                  ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _mutationError = null;
+                        });
+                      },
+                      child: const Text('Dismiss'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // Save button
                 FilledButton.icon(
                   onPressed: _isSaving ? null : _saveUrl,
@@ -288,4 +309,11 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
       ),
     );
   }
+}
+
+class _SaveMutationError {
+  const _SaveMutationError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
 }

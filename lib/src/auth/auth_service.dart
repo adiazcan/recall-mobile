@@ -1,3 +1,6 @@
+import 'dart:developer' as developer;
+
+import 'package:flutter/foundation.dart';
 import 'package:msal_flutter/msal_flutter.dart';
 
 import 'token_store.dart';
@@ -19,22 +22,48 @@ class AuthService {
 
   PublicClientApplication? _app;
 
+  void _log(String message) {
+    if (kDebugMode) {
+      developer.log(message, name: 'AuthService');
+    }
+  }
+
   Future<void> _ensureInitialized() async {
     if (_app != null) return;
 
-    _app = await PublicClientApplication.createPublicClientApplication(
-      clientId,
-      authority: 'https://login.microsoftonline.com/$tenantId',
-    );
+    _log('Initializing MSAL');
+
+    try {
+      _app = await PublicClientApplication.createPublicClientApplication(
+        clientId,
+        authority: 'https://login.microsoftonline.com/$tenantId',
+      );
+      _log('MSAL initialized successfully');
+    } catch (e) {
+      _log('Failed to initialize MSAL: $e');
+      rethrow;
+    }
   }
 
   Future<String> signIn() async {
-    await _ensureInitialized();
+    try {
+      await _ensureInitialized();
 
-    final result = await _app!.acquireToken(_scopes);
+      _log('Starting sign-in with ${_scopes.length} scopes');
 
-    await tokenStore.saveToken(result);
-    return result;
+      final result = await _app!.acquireToken(_scopes);
+
+      _log('Sign-in successful, token acquired');
+      await tokenStore.saveToken(result);
+      return result;
+    } on MsalException catch (e) {
+      _log('MSAL Exception: ${e.errorMessage}');
+      throw AuthException('Authentication failed: ${e.errorMessage}');
+    } catch (e, stackTrace) {
+      _log('Unexpected error during sign-in: $e');
+      _log('Stack trace: $stackTrace');
+      throw AuthException('Sign in failed: ${e.toString()}');
+    }
   }
 
   Future<void> signOut() async {
@@ -50,13 +79,17 @@ class AuthService {
   }
 
   Future<String?> acquireTokenSilent() async {
-    await _ensureInitialized();
-
     try {
+      await _ensureInitialized();
+
       final result = await _app!.acquireTokenSilent(_scopes);
       await tokenStore.saveToken(result);
       return result;
-    } catch (_) {
+    } on MsalException {
+      // Silent auth failed - user needs to sign in interactively
+      return null;
+    } catch (e) {
+      // Other errors - log and return null
       return null;
     }
   }
