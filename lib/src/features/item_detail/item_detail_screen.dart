@@ -151,7 +151,6 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
       if (!mounted) return;
 
-      const inboxSentinel = '__inbox__';
       final selectedCollectionId = await showDialog<String?>(
         context: context,
         builder: (context) => CollectionPickerDialog(
@@ -161,9 +160,10 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       );
 
       if (selectedCollectionId == null) return;
-      final targetCollectionId = selectedCollectionId == inboxSentinel
-          ? null
-          : selectedCollectionId;
+      final targetCollectionId =
+          selectedCollectionId == CollectionPickerDialog.inboxSentinel
+              ? null
+              : selectedCollectionId;
 
       setState(() {
         _isUpdating = true;
@@ -618,6 +618,8 @@ class CollectionPickerDialog extends ConsumerWidget {
     required this.currentCollectionId,
   });
 
+  static const String inboxSentinel = '__inbox__';
+
   final List<Collection> collections;
   final String? currentCollectionId;
 
@@ -641,7 +643,8 @@ class CollectionPickerDialog extends ConsumerWidget {
                 // ignore: deprecated_member_use
                 onChanged: null,
               ),
-              onTap: () => Navigator.of(context).pop('__inbox__'),
+              onTap: () =>
+                  Navigator.of(context).pop(CollectionPickerDialog.inboxSentinel),
             ),
             const Divider(),
             // Collections

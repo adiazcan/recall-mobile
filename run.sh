@@ -42,10 +42,16 @@ esac
 
 # Read .env file and build --dart-define arguments
 DART_DEFINES=()
-while IFS= read -r line; do
+while IFS= read -r line || [ -n "$line" ]; do
+    # Remove CRLF line endings
+    line="${line%$'\r'}"
+    
     # Skip comments and empty lines
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
     [[ -z "${line// }" ]] && continue
+    
+    # Skip lines starting with 'export'
+    [[ "$line" =~ ^[[:space:]]*export[[:space:]]+ ]] && line="${line#*export }"
     
     # Extract key and value, preserving spaces in value
     if [[ "$line" =~ ^[[:space:]]*([^=]+)=(.*)$ ]]; then
@@ -55,6 +61,20 @@ while IFS= read -r line; do
         # Trim leading/trailing whitespace from key only
         key="${key#"${key%%[![:space:]]*}"}"
         key="${key%"${key##*[![:space:]]}"}"
+        
+        # Strip inline comments (anything after # that's not in quotes)
+        # Note: This is a simple approach that doesn't handle # characters
+        # inside quoted strings. If you need FOO="bar#baz", avoid inline comments
+        # or move the comment to a separate line.
+        value="${value%%#*}"
+        
+        # Trim trailing whitespace from value
+        value="${value%"${value##*[![:space:]]}"}"
+        
+        # Strip surrounding quotes if present (single or double)
+        if [[ "$value" =~ ^\"(.*)\"$ ]] || [[ "$value" =~ ^\'(.*)\'$ ]]; then
+            value="${BASH_REMATCH[1]}"
+        fi
         
         # Add to dart defines (value may contain spaces)
         DART_DEFINES+=("--dart-define=${key}=${value}")

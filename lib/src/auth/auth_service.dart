@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart';
 import 'package:msal_flutter/msal_flutter.dart';
 
 import 'token_store.dart';
@@ -22,18 +23,15 @@ class AuthService {
   PublicClientApplication? _app;
 
   void _log(String message) {
-    developer.log(message, name: 'AuthService');
+    if (kDebugMode) {
+      developer.log(message, name: 'AuthService');
+    }
   }
 
   Future<void> _ensureInitialized() async {
     if (_app != null) return;
 
-    _log('Initializing MSAL with:');
-    _log('  Client ID: $clientId');
-    _log('  Tenant ID: $tenantId');
-    _log(
-      '[AuthService]   Authority: https://login.microsoftonline.com/$tenantId',
-    );
+    _log('Initializing MSAL');
 
     try {
       _app = await PublicClientApplication.createPublicClientApplication(
@@ -51,11 +49,7 @@ class AuthService {
     try {
       await _ensureInitialized();
 
-      _log('Starting sign-in with scopes: $_scopes');
-      _log('Redirect URI: $redirectUri');
-      _log(
-        '[AuthService] Authority: https://login.microsoftonline.com/$tenantId',
-      );
+      _log('Starting sign-in with ${_scopes.length} scopes');
 
       final result = await _app!.acquireToken(_scopes);
 

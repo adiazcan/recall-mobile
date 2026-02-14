@@ -97,7 +97,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
       items: cachedItems,
       filters: const InboxFilters(),
       nextCursor: null,
-      hasMore: cachedItems.isEmpty, // Assume more if cache is empty
+      hasMore: true, // Optimistically assume there may be more items
       isLoadingMore: false,
       backgroundError: null,
     );
