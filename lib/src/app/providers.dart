@@ -72,7 +72,15 @@ class TagsNotifier extends AsyncNotifier<List<Tag>> {
 
     if (cachedTagsJson != null && cachedTagsJson.isNotEmpty) {
       final cachedTags = CacheService.decodeList(cachedTagsJson, Tag.fromJson);
-      Future<void>(() => refresh());
+      // Trigger background refresh with error handling
+      Future<void>(() async {
+        try {
+          await refresh();
+        } catch (e) {
+          // Background refresh failed, but we still have cached data
+          // Error is already captured in the AsyncValue state
+        }
+      });
       return cachedTags;
     }
 
@@ -80,8 +88,12 @@ class TagsNotifier extends AsyncNotifier<List<Tag>> {
   }
 
   Future<void> refresh() async {
-    final tags = await _fetchTags();
-    state = AsyncValue.data(tags);
+    try {
+      final tags = await _fetchTags();
+      state = AsyncValue.data(tags);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
   }
 
   Future<List<Tag>> _fetchTags() async {

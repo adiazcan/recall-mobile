@@ -29,7 +29,8 @@ The project supports three environment files:
 - **`.env.staging`** - Staging environment (staging backend and Entra app)
 - **`.env.prod`** - Production environment (production backend and Entra app)
 
-All `.env.*` files are **gitignored** and should never be committed to version control.
+Only the template file **`.env.example`** is committed to version control.
+The concrete environment files (`.env.dev`, `.env.staging`, `.env.prod`, or any other `.env.*` files) are **local-only secrets** and must be listed in your `.gitignore` (using patterns like `*.env` and `.env*`) so they are never committed.
 
 ## Configuration Options
 
@@ -40,7 +41,7 @@ All `.env.*` files are **gitignored** and should never be committed to version c
 | `ENTRA_CLIENT_ID` | Azure app registration client ID | `a1b2c3d4-e5f6-7890-abcd-ef1234567890` |
 | `ENTRA_TENANT_ID` | Azure tenant/directory ID | `12345678-1234-1234-1234-123456789012` |
 | `ENTRA_SCOPES` | Space-separated OAuth scopes | `api://recall/Items.ReadWrite User.Read offline_access` |
-| `ENTRA_REDIRECT_URI` | Mobile redirect URI | `msauth://com.recall.mobile/callback` |
+| `ENTRA_REDIRECT_URI` | Mobile redirect URI | `msauth.com.recall.mobile://auth` |
 | `API_BASE_URL` | Backend API base URL | `https://api.recall.com` |
 | `OPENAPI_SPEC_URL` | OpenAPI spec endpoint | `https://api.recall.com/openapi.json` |
 
