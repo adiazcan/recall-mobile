@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -205,39 +206,53 @@ class AppDrawer extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     final controller = TextEditingController();
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('New collection'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Collection name'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Create'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (created != true) {
-      return;
-    }
-
     try {
-      await ref
-          .read(collectionsProvider.notifier)
-          .createCollection(controller.text);
-    } catch (_) {}
+      final created = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('New collection'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(hintText: 'Collection name'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (created != true) {
+        return;
+      }
+
+      try {
+        await ref
+            .read(collectionsProvider.notifier)
+            .createCollection(controller.text);
+      } catch (error, stackTrace) {
+        debugPrint('Failed to create collection: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to create collection. Please try again.'),
+            ),
+          );
+        }
+      }
+    } finally {
+      controller.dispose();
+    }
   }
 }
 

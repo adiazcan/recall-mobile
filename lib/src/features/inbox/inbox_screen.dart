@@ -201,7 +201,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       ),
       actions: [
         HeaderIconAction(
-          onPressed: () {},
+          onPressed: null,
           icon: Icons.search,
           tooltip: 'Search',
         ),

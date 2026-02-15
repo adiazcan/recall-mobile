@@ -75,6 +75,10 @@ import MSAL
     guard let sourceApplication = options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String else {
       return super.application(app, open: url, options: options)
     }
-    return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: sourceApplication)
+    let handledByMSAL = MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: sourceApplication)
+    if handledByMSAL {
+      return true
+    }
+    return super.application(app, open: url, options: options)
   }
 }
