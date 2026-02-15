@@ -31,7 +31,11 @@ class Tag {
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'count': itemCount};
+    final map = <String, dynamic>{'id': id, 'name': name};
+    if (itemCount != null) {
+      map['count'] = itemCount;
+    }
+    return map;
   }
 
   @override
