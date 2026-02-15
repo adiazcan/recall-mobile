@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/providers.dart';
 import '../../models/collection.dart';
 import '../../models/item.dart';
 import '../../models/tag.dart';
 import '../collections/collections_providers.dart';
 import '../shared/design_tokens.dart';
 import '../shared/error_view.dart';
+import '../shared/image_url_resolver.dart';
 import '../shared/tag_picker.dart';
 import 'item_detail_providers.dart';
 
@@ -365,6 +367,28 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
 
   Widget _buildItemDetails(Item item) {
     final collectionsAsync = ref.watch(collectionsProvider);
+    final appConfig = ref.watch(appConfigProvider);
+    final token = ref.watch(authTokenProvider).asData?.value;
+    final rawImageUrl = item.thumbnailImageUrl;
+    final imageUrl = resolveImageUrl(rawImageUrl, appConfig.apiBaseUrl);
+    final requiresAuth = imageUrl != null
+        ? imageUrlRequiresAuth(imageUrl, appConfig.apiBaseUrl)
+        : false;
+    final imageHeaders = buildImageAuthHeaders(
+      imageUrl: imageUrl,
+      apiBaseUrl: appConfig.apiBaseUrl,
+      bearerToken: token,
+    );
+    final canRenderImage =
+        imageUrl != null && (!requiresAuth || imageHeaders != null);
+    if (appConfig.logHttp && rawImageUrl != null) {
+      final source = item.previewImageUrl?.trim().isNotEmpty == true
+          ? 'previewImageUrl'
+          : 'thumbnailUrl';
+      debugPrint(
+        '[Image] Detail item=${item.id} source=$source raw=$rawImageUrl resolved=${imageUrl ?? 'invalid'} requiresAuth=$requiresAuth hasAuthHeader=${imageHeaders != null}',
+      );
+    }
     final collectionLabel = collectionsAsync.when(
       data: (collections) {
         if (item.collectionId == null) {
@@ -389,7 +413,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (item.previewImageUrl != null) ...[
+          if (canRenderImage) ...[
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
@@ -404,25 +428,46 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: CachedNetworkImage(
-                  imageUrl: item.previewImageUrl!,
+                  imageUrl: imageUrl,
+                  httpHeaders: imageHeaders,
                   width: double.infinity,
                   height: 193,
                   fit: BoxFit.cover,
+                  imageBuilder: (context, imageProvider) {
+                    if (appConfig.logHttp) {
+                      debugPrint(
+                        '[Image] Loaded detail thumbnail item=${item.id} url=$imageUrl',
+                      );
+                    }
+                    return Image(
+                      image: imageProvider,
+                      width: double.infinity,
+                      height: 193,
+                      fit: BoxFit.cover,
+                    );
+                  },
                   placeholder: (context, url) => Container(
                     height: 193,
                     color: RecallColors.neutral100,
                     child: const Center(child: CircularProgressIndicator()),
                   ),
-                  errorWidget: (context, url, error) => Container(
-                    height: 193,
-                    color: RecallColors.neutral100,
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.broken_image_outlined,
-                      size: 40,
-                      color: RecallColors.neutral400,
-                    ),
-                  ),
+                  errorWidget: (context, url, error) {
+                    if (appConfig.logHttp) {
+                      debugPrint(
+                        '[Image] Failed detail thumbnail item=${item.id} url=$url error=$error',
+                      );
+                    }
+                    return Container(
+                      height: 193,
+                      color: RecallColors.neutral100,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.broken_image_outlined,
+                        size: 40,
+                        color: RecallColors.neutral400,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

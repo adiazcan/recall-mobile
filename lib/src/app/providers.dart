@@ -25,6 +25,10 @@ final sharedPreferencesProvider = FutureProvider<SharedPreferences>(
 
 final tokenStoreProvider = Provider<TokenStore>((_) => SecureTokenStore());
 
+final authTokenProvider = FutureProvider<String?>((ref) async {
+  return ref.watch(tokenStoreProvider).getToken();
+});
+
 final authServiceProvider = Provider<AuthService>((ref) {
   final config = ref.watch(appConfigProvider);
   return AuthService(

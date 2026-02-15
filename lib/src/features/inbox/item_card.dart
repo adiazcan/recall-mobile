@@ -1,21 +1,45 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers.dart';
 import '../../models/item.dart';
 import '../shared/design_tokens.dart';
+import '../shared/image_url_resolver.dart';
 
-class ItemCard extends StatelessWidget {
+class ItemCard extends ConsumerWidget {
   const ItemCard({super.key, required this.item, this.onTap});
 
   final Item item;
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final config = ref.watch(appConfigProvider);
+    final token = ref.watch(authTokenProvider).asData?.value;
+    final rawImageUrl = item.thumbnailImageUrl;
+    final imageUrl = resolveImageUrl(rawImageUrl, config.apiBaseUrl);
+    final requiresAuth = imageUrl != null
+        ? imageUrlRequiresAuth(imageUrl, config.apiBaseUrl)
+        : false;
+    final imageHeaders = buildImageAuthHeaders(
+      imageUrl: imageUrl,
+      apiBaseUrl: config.apiBaseUrl,
+      bearerToken: token,
+    );
     final hasImage =
-        item.previewImageUrl != null && item.previewImageUrl!.isNotEmpty;
+        imageUrl != null && (!requiresAuth || imageHeaders != null);
     final timeAgo = _formatTimeAgo(item.createdAt);
     final initial = _fallbackInitial();
+
+    if (config.logHttp && rawImageUrl != null) {
+      final source = item.previewImageUrl?.trim().isNotEmpty == true
+          ? 'previewImageUrl'
+          : 'thumbnailUrl';
+      debugPrint(
+        '[Image] Inbox item=${item.id} source=$source raw=$rawImageUrl resolved=${imageUrl ?? 'invalid'} requiresAuth=$requiresAuth hasAuthHeader=${imageHeaders != null}',
+      );
+    }
 
     return InkWell(
       onTap: onTap,
@@ -30,8 +54,11 @@ class ItemCard extends StatelessWidget {
           children: [
             _FaviconTile(
               hasImage: hasImage,
-              imageUrl: item.previewImageUrl,
+              imageUrl: imageUrl,
+              httpHeaders: imageHeaders,
               initial: initial,
+              logHttp: config.logHttp,
+              itemId: item.id,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -147,12 +174,18 @@ class _FaviconTile extends StatelessWidget {
   const _FaviconTile({
     required this.hasImage,
     required this.imageUrl,
+    required this.httpHeaders,
     required this.initial,
+    required this.logHttp,
+    required this.itemId,
   });
 
   final bool hasImage;
   final String? imageUrl;
+  final Map<String, String>? httpHeaders;
   final String initial;
+  final bool logHttp;
+  final String itemId;
 
   @override
   Widget build(BuildContext context) {
@@ -170,11 +203,36 @@ class _FaviconTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(9),
               child: CachedNetworkImage(
                 imageUrl: imageUrl!,
+                httpHeaders: httpHeaders,
                 width: 38,
                 height: 38,
                 fit: BoxFit.cover,
-                errorWidget: (context, url, error) =>
-                    Text(initial, style: RecallTextStyles.faviconFallback),
+                imageBuilder: (context, imageProvider) {
+                  if (logHttp) {
+                    debugPrint(
+                      '[Image] Loaded inbox thumbnail item=$itemId url=$imageUrl',
+                    );
+                  }
+                  return Image(
+                    image: imageProvider,
+                    width: 38,
+                    height: 38,
+                    fit: BoxFit.cover,
+                  );
+                },
+                errorWidget: (context, url, error) => Builder(
+                  builder: (context) {
+                    if (logHttp) {
+                      debugPrint(
+                        '[Image] Failed inbox thumbnail item=$itemId url=$url error=$error',
+                      );
+                    }
+                    return Text(
+                      initial,
+                      style: RecallTextStyles.faviconFallback,
+                    );
+                  },
+                ),
               ),
             )
           : Text(initial, style: RecallTextStyles.faviconFallback),

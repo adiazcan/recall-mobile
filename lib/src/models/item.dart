@@ -24,6 +24,7 @@ class Item {
     this.excerpt,
     required this.domain,
     this.previewImageUrl,
+    this.thumbnailUrl,
     required this.status,
     required this.isFavorite,
     this.collectionId,
@@ -38,12 +39,27 @@ class Item {
   final String? excerpt;
   final String domain;
   final String? previewImageUrl;
+  final String? thumbnailUrl;
   final ItemStatus status;
   final bool isFavorite;
   final String? collectionId;
   final List<Tag> tags;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  String? get thumbnailImageUrl {
+    final preview = previewImageUrl?.trim();
+    if (preview != null && preview.isNotEmpty) {
+      return preview;
+    }
+
+    final thumbnail = thumbnailUrl?.trim();
+    if (thumbnail != null && thumbnail.isNotEmpty) {
+      return thumbnail;
+    }
+
+    return null;
+  }
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
@@ -52,7 +68,18 @@ class Item {
       title: (json['title'] as String?) ?? 'Untitled',
       excerpt: json['excerpt'] as String?,
       domain: (json['domain'] as String?) ?? '',
-      previewImageUrl: json['previewImageUrl'] as String?,
+      previewImageUrl: _readString(json, const [
+        'previewImageUrl',
+        'preview_image_url',
+        'preview_image',
+        'imageUrl',
+        'image_url',
+      ]),
+      thumbnailUrl: _readString(json, const [
+        'thumbnailUrl',
+        'thumbnail_url',
+        'thumbnail',
+      ]),
       status: ItemStatus.fromJson((json['status'] as String?) ?? 'unread'),
       isFavorite: (json['isFavorite'] as bool?) ?? false,
       collectionId: json['collectionId'] as String?,
@@ -60,6 +87,16 @@ class Item {
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
+  }
+
+  static String? _readString(Map<String, dynamic> json, List<String> keys) {
+    for (final key in keys) {
+      final value = json[key];
+      if (value is String && value.trim().isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
   }
 
   static List<Tag> _parseTags(dynamic value) {
@@ -96,6 +133,7 @@ class Item {
       'excerpt': excerpt,
       'domain': domain,
       'previewImageUrl': previewImageUrl,
+      'thumbnailUrl': thumbnailUrl,
       'status': status.name,
       'isFavorite': isFavorite,
       'collectionId': collectionId,
@@ -112,6 +150,7 @@ class Item {
     String? Function()? excerpt,
     String? domain,
     String? Function()? previewImageUrl,
+    String? Function()? thumbnailUrl,
     ItemStatus? status,
     bool? isFavorite,
     String? Function()? collectionId,
@@ -128,6 +167,7 @@ class Item {
       previewImageUrl: previewImageUrl != null
           ? previewImageUrl()
           : this.previewImageUrl,
+      thumbnailUrl: thumbnailUrl != null ? thumbnailUrl() : this.thumbnailUrl,
       status: status ?? this.status,
       isFavorite: isFavorite ?? this.isFavorite,
       collectionId: collectionId != null ? collectionId() : this.collectionId,

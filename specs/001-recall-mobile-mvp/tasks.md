@@ -187,6 +187,9 @@
 - [X] T059 Fix tag creation/update contract mismatch for live API (no POST /tags, use tags:string[]) in lib/src/network/api_client.dart, lib/src/features/item_detail/item_detail_providers.dart, and lib/src/features/save_url/save_url_screen.dart
 - [X] T060 Refresh inbox/drawer menu data after item mutations and show tag item counts in menu in lib/src/features/item_detail/item_detail_providers.dart, lib/src/features/save_url/save_url_screen.dart, lib/src/features/home/app_drawer.dart, and lib/src/models/tag.dart
 - [X] T061 Fix inbox header title and selected menu count to follow active filter route in lib/src/features/inbox/inbox_screen.dart and lib/src/features/home/app_drawer.dart
+- [X] T062 Use thumbnailUrl fallback when previewImageUrl is null for item thumbnails in lib/src/models/item.dart, lib/src/features/inbox/item_card.dart, and lib/src/features/item_detail/item_detail_screen.dart
+- [X] T063 Send Authorization header for API-hosted thumbnailUrl image requests in lib/src/features/shared/image_url_resolver.dart, lib/src/app/providers.dart, lib/src/features/inbox/item_card.dart, and lib/src/features/item_detail/item_detail_screen.dart
+- [X] T064 Replace hardcoded drawer profile name with Entra user claims and add user name/email section to Settings in lib/src/auth/auth_state.dart, lib/src/features/home/app_drawer.dart, and lib/src/features/settings/settings_screen.dart
 
 ---
 
