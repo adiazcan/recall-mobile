@@ -19,6 +19,7 @@ class AppDrawer extends ConsumerWidget {
     final inboxState = ref.watch(inboxProvider);
     final collectionsState = ref.watch(collectionsProvider);
     final tagsState = ref.watch(tagsProvider);
+    final authState = ref.watch(authStateProvider);
 
     final activeFilterCount = inboxState.maybeWhen(
       data: (state) => state.items.length,
@@ -28,6 +29,20 @@ class AppDrawer extends ConsumerWidget {
     final isInboxSelected = currentPath == '/inbox';
     final isFavoritesSelected = currentPath == '/favorites';
     final isArchiveSelected = currentPath == '/archive';
+
+    final userName = authState.maybeWhen(
+      data: (state) => state.userName,
+      orElse: () => null,
+    );
+    final userEmail = authState.maybeWhen(
+      data: (state) => state.userEmail,
+      orElse: () => null,
+    );
+    final displayName = (userName != null && userName.trim().isNotEmpty)
+        ? userName.trim()
+        : (userEmail != null && userEmail.trim().isNotEmpty)
+        ? userEmail.trim()
+        : 'Account';
 
     return Drawer(
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -102,6 +117,7 @@ class AppDrawer extends ConsumerWidget {
               _ProfileFooter(
                 selected: currentPath == '/settings',
                 onSettingsTap: () => _go(context, '/settings'),
+                displayName: displayName,
               ),
             ],
           ),
@@ -397,10 +413,33 @@ class _TagNavItem extends StatelessWidget {
 }
 
 class _ProfileFooter extends StatelessWidget {
-  const _ProfileFooter({required this.onSettingsTap, required this.selected});
+  const _ProfileFooter({
+    required this.onSettingsTap,
+    required this.selected,
+    required this.displayName,
+  });
 
   final VoidCallback onSettingsTap;
   final bool selected;
+  final String displayName;
+
+  String _buildInitials(String value) {
+    final parts = value
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) {
+      return 'A';
+    }
+
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -428,11 +467,18 @@ class _ProfileFooter extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  child: const Text('JD', style: RecallTextStyles.drawerAvatar),
+                  child: Text(
+                    _buildInitials(displayName),
+                    style: RecallTextStyles.drawerAvatar,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
-                  child: Text('John Doe', style: RecallTextStyles.drawerItem),
+                Expanded(
+                  child: Text(
+                    displayName,
+                    style: RecallTextStyles.drawerItem,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const Icon(
                   Icons.settings,

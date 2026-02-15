@@ -37,6 +37,32 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
+            Text('User', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            authState.when(
+              data: (state) {
+                final userName = state.userName?.trim();
+                final userEmail = state.userEmail?.trim();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Name: ${userName == null || userName.isEmpty ? 'Not available' : userName}',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Email: ${userEmail == null || userEmail.isEmpty ? 'Not available' : userEmail}',
+                    ),
+                  ],
+                );
+              },
+              loading: () => const CircularProgressIndicator(),
+              error: (error, _) => Text('Error loading user: $error'),
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
             Text(
               'Authentication',
               style: Theme.of(context).textTheme.titleLarge,
