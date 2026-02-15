@@ -69,12 +69,12 @@ class HeaderIconAction extends StatelessWidget {
     super.key,
     required this.icon,
     required this.tooltip,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
