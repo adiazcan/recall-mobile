@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/item.dart';
+import '../shared/design_tokens.dart';
 
 class ItemCard extends StatelessWidget {
   const ItemCard({super.key, required this.item, this.onTap});
@@ -11,159 +12,208 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final hasImage =
         item.previewImageUrl != null && item.previewImageUrl!.isNotEmpty;
+    final timeAgo = _formatTimeAgo(item.createdAt);
+    final initial = _fallbackInitial();
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Preview image thumbnail
-              if (hasImage)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: CachedNetworkImage(
-                    imageUrl: item.previewImageUrl!,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      width: 80,
-                      height: 80,
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: const Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        decoration: const BoxDecoration(
+          color: RecallColors.white,
+          border: Border(bottom: BorderSide(color: RecallColors.neutral100)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _FaviconTile(
+              hasImage: hasImage,
+              imageUrl: item.previewImageUrl,
+              initial: initial,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: RecallTextStyles.itemTitle,
                         ),
                       ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 80,
-                      height: 80,
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: Icon(
-                        Icons.broken_image_outlined,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-
-              if (hasImage) const SizedBox(width: 12),
-
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title row with favorite icon
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      if (item.isFavorite) ...[
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.star,
+                          size: 14,
+                          color: RecallColors.favorite,
                         ),
-                        const SizedBox(width: 8),
-                        if (item.isFavorite)
-                          Icon(
-                            Icons.star,
-                            size: 20,
-                            color: theme.colorScheme.primary,
-                          ),
                       ],
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Domain
-                    Text(
-                      item.domain,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-
-                    if (item.excerpt != null && item.excerpt!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      // Excerpt
-                      Text(
-                        item.excerpt!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ],
-
-                    const SizedBox(height: 8),
-
-                    // Status indicator and tags
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        // Status chip
-                        if (item.status == ItemStatus.archived)
-                          Chip(
-                            label: const Text('Archived'),
-                            labelStyle: theme.textTheme.labelSmall,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-
-                        // Tags (show first 2)
-                        ...item.tags
-                            .take(2)
-                            .map(
-                              (tag) => Chip(
-                                label: Text(tag.name),
-                                labelStyle: theme.textTheme.labelSmall,
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ),
-
-                        // More tags indicator
-                        if (item.tags.length > 2)
-                          Chip(
-                            label: Text('+${item.tags.length - 2}'),
-                            labelStyle: theme.textTheme.labelSmall,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                      ],
+                  ),
+                  if (item.excerpt != null && item.excerpt!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      item.excerpt!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: RecallTextStyles.itemExcerpt,
                     ),
                   ],
-                ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          item.domain,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: RecallTextStyles.itemDomain,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const _MetaDot(),
+                      const SizedBox(width: 8),
+                      Text(timeAgo, style: RecallTextStyles.itemMeta),
+                      if (item.tags.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                ...item.tags
+                                    .take(2)
+                                    .map(
+                                      (tag) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8,
+                                        ),
+                                        child: _TagPill(label: '#${tag.name}'),
+                                      ),
+                                    ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  String _fallbackInitial() {
+    final source = item.domain.isNotEmpty ? item.domain : item.title;
+    final first = source.trim().isEmpty ? 'R' : source.trim()[0];
+    return first.toUpperCase();
+  }
+
+  String _formatTimeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+
+    if (diff.inDays >= 1) {
+      final value = diff.inDays;
+      return '$value ${value == 1 ? 'day' : 'days'} ago';
+    }
+
+    if (diff.inHours >= 1) {
+      final value = diff.inHours;
+      return '$value ${value == 1 ? 'hour' : 'hours'} ago';
+    }
+
+    if (diff.inMinutes >= 1) {
+      final value = diff.inMinutes;
+      return '$value ${value == 1 ? 'minute' : 'minutes'} ago';
+    }
+
+    return 'Just now';
+  }
+}
+
+class _FaviconTile extends StatelessWidget {
+  const _FaviconTile({
+    required this.hasImage,
+    required this.imageUrl,
+    required this.initial,
+  });
+
+  final bool hasImage;
+  final String? imageUrl;
+  final String initial;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: RecallColors.neutral100,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: RecallColors.neutral200),
+      ),
+      alignment: Alignment.center,
+      child: hasImage
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(9),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl!,
+                width: 38,
+                height: 38,
+                fit: BoxFit.cover,
+                errorWidget: (context, url, error) =>
+                    Text(initial, style: RecallTextStyles.faviconFallback),
+              ),
+            )
+          : Text(initial, style: RecallTextStyles.faviconFallback),
+    );
+  }
+}
+
+class _MetaDot extends StatelessWidget {
+  const _MetaDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 4,
+      height: 4,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: RecallColors.neutral300,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+class _TagPill extends StatelessWidget {
+  const _TagPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: const BoxDecoration(
+        color: RecallColors.neutral100,
+        borderRadius: BorderRadius.all(Radius.circular(999)),
+      ),
+      child: Text(label, style: RecallTextStyles.tag),
     );
   }
 }

@@ -1,15 +1,41 @@
 class Tag {
-  const Tag({required this.id, required this.name});
+  const Tag({required this.id, required this.name, this.itemCount});
 
   final String id;
   final String name;
+  final int? itemCount;
 
   factory Tag.fromJson(Map<String, dynamic> json) {
-    return Tag(id: json['id'] as String, name: json['name'] as String);
+    final rawId = json['id'];
+    final rawName = json['name'];
+
+    final id = rawId?.toString().trim() ?? '';
+    final name = rawName?.toString().trim() ?? '';
+
+    final resolvedId = id.isNotEmpty ? id : name;
+    final resolvedName = name.isNotEmpty ? name : id;
+
+    if (resolvedId.isEmpty || resolvedName.isEmpty) {
+      throw const FormatException('Tag requires a non-empty id or name');
+    }
+
+    int? parsedCount;
+    final rawCount = json['count'];
+    if (rawCount is int) {
+      parsedCount = rawCount;
+    } else if (rawCount is String) {
+      parsedCount = int.tryParse(rawCount);
+    }
+
+    return Tag(id: resolvedId, name: resolvedName, itemCount: parsedCount);
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name};
+    final map = <String, dynamic>{'id': id, 'name': name};
+    if (itemCount != null) {
+      map['count'] = itemCount;
+    }
+    return map;
   }
 
   @override

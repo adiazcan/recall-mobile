@@ -2,13 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/providers.dart';
+import '../../models/collection.dart';
+import '../../models/tag.dart';
+import '../collections/collections_providers.dart';
+import '../home/home_screen.dart';
+import '../shared/app_header.dart';
+import '../shared/design_tokens.dart';
 import '../shared/empty_state.dart';
 import '../shared/error_view.dart';
 import 'inbox_providers.dart';
 import 'item_card.dart';
 
+enum InboxViewFilter { inbox, favorites, archive }
+
 class InboxScreen extends ConsumerStatefulWidget {
-  const InboxScreen({super.key});
+  const InboxScreen({
+    super.key,
+    this.viewFilter = InboxViewFilter.inbox,
+    this.collectionId,
+    this.tagId,
+  });
+
+  final InboxViewFilter viewFilter;
+  final String? collectionId;
+  final String? tagId;
 
   @override
   ConsumerState<InboxScreen> createState() => _InboxScreenState();
@@ -22,6 +40,17 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    Future<void>.microtask(_syncRouteFilters);
+  }
+
+  @override
+  void didUpdateWidget(covariant InboxScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewFilter != widget.viewFilter ||
+        oldWidget.collectionId != widget.collectionId ||
+        oldWidget.tagId != widget.tagId) {
+      Future<void>.microtask(_syncRouteFilters);
+    }
   }
 
   @override
@@ -39,27 +68,61 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     }
   }
 
+  Future<void> _syncRouteFilters() async {
+    final notifier = ref.read(inboxProvider.notifier);
+    final currentFilters = ref.read(inboxProvider).asData?.value.filters;
+
+    final targetFilters = _buildRouteFilters();
+    if (currentFilters != null && _sameFilters(currentFilters, targetFilters)) {
+      return;
+    }
+
+    await notifier.updateFilters(targetFilters);
+  }
+
+  InboxFilters _buildRouteFilters() {
+    if (widget.collectionId != null && widget.collectionId!.isNotEmpty) {
+      return InboxFilters(collectionId: widget.collectionId);
+    }
+
+    if (widget.tagId != null && widget.tagId!.isNotEmpty) {
+      return InboxFilters(tagIds: [widget.tagId!]);
+    }
+
+    switch (widget.viewFilter) {
+      case InboxViewFilter.favorites:
+        return const InboxFilters(isFavorite: true);
+      case InboxViewFilter.archive:
+        return const InboxFilters(status: 'archived');
+      case InboxViewFilter.inbox:
+        return const InboxFilters(status: 'unread');
+    }
+  }
+
+  bool _sameFilters(InboxFilters left, InboxFilters right) {
+    final leftTags = left.tagIds ?? const <String>[];
+    final rightTags = right.tagIds ?? const <String>[];
+
+    return left.status == right.status &&
+        left.isFavorite == right.isFavorite &&
+        left.collectionId == right.collectionId &&
+        leftTags.length == rightTags.length &&
+        leftTags.every(rightTags.contains);
+  }
+
   @override
   Widget build(BuildContext context) {
     final inboxState = ref.watch(inboxProvider);
+    final collectionsState = ref.watch(collectionsProvider);
+    final tagsState = ref.watch(tagsProvider);
+    final itemCount = inboxState.maybeWhen(
+      data: (state) => state.items.length,
+      orElse: () => 0,
+    );
+    final headerTitle = _resolveHeaderTitle(collectionsState, tagsState);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inbox'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _showFilterBar ? Icons.filter_alt : Icons.filter_alt_outlined,
-            ),
-            onPressed: () {
-              setState(() {
-                _showFilterBar = !_showFilterBar;
-              });
-            },
-            tooltip: 'Filters',
-          ),
-        ],
-      ),
+      appBar: _buildInboxAppBar(headerTitle, itemCount),
       body: Column(
         children: [
           // Filter bar
@@ -81,8 +144,83 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     );
   }
 
+  String _resolveHeaderTitle(
+    AsyncValue<List<Collection>> collectionsState,
+    AsyncValue<List<Tag>> tagsState,
+  ) {
+    if (widget.collectionId != null && widget.collectionId!.isNotEmpty) {
+      final collections = collectionsState.asData?.value;
+      if (collections != null) {
+        for (final collection in collections) {
+          if (collection.id == widget.collectionId) {
+            return collection.name;
+          }
+        }
+      }
+      return 'Collection';
+    }
+
+    if (widget.tagId != null && widget.tagId!.isNotEmpty) {
+      final tags = tagsState.asData?.value;
+      if (tags != null) {
+        for (final tag in tags) {
+          if (tag.id == widget.tagId) {
+            return '#${tag.name}';
+          }
+        }
+      }
+      return 'Tag';
+    }
+
+    switch (widget.viewFilter) {
+      case InboxViewFilter.favorites:
+        return 'Favorites';
+      case InboxViewFilter.archive:
+        return 'Archive';
+      case InboxViewFilter.inbox:
+        return 'Inbox';
+    }
+  }
+
+  PreferredSizeWidget _buildInboxAppBar(String title, int itemCount) {
+    return RecallAppBar(
+      onMenuPressed: () => HomeScreen.scaffoldKey.currentState?.openDrawer(),
+      title: Row(
+        children: [
+          Text(title, style: RecallTextStyles.headerTitle),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: const BoxDecoration(
+              color: RecallColors.neutral100,
+              borderRadius: BorderRadius.all(Radius.circular(999)),
+            ),
+            child: Text('$itemCount', style: RecallTextStyles.headerCount),
+          ),
+        ],
+      ),
+      actions: [
+        HeaderIconAction(
+          onPressed: null,
+          icon: Icons.search,
+          tooltip: 'Search',
+        ),
+        HeaderIconAction(
+          onPressed: () {
+            setState(() {
+              _showFilterBar = !_showFilterBar;
+            });
+          },
+          icon: _showFilterBar ? Icons.filter_alt : Icons.filter_alt_outlined,
+          tooltip: 'Filters',
+        ),
+        HeaderAddButton(onTap: () => context.push('/save')),
+      ],
+    );
+  }
+
   Widget _buildFilterBar() {
-    final state = ref.watch(inboxProvider).valueOrNull;
+    final state = ref.watch(inboxProvider).asData?.value;
     if (state == null) return const SizedBox.shrink();
 
     final filters = state.filters;
@@ -107,7 +245,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               if (filters.hasActiveFilters)
                 TextButton(
                   onPressed: () {
-                    ref.read(inboxProvider.notifier).clearFilters();
+                    ref
+                        .read(inboxProvider.notifier)
+                        .updateFilters(_buildRouteFilters());
                   },
                   child: const Text('Clear all'),
                 ),
@@ -143,7 +283,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onSelected: (selected) {
         final notifier = ref.read(inboxProvider.notifier);
         final currentFilters =
-            ref.read(inboxProvider).valueOrNull?.filters ??
+            ref.read(inboxProvider).asData?.value.filters ??
             const InboxFilters();
 
         String? newStatus;
@@ -170,7 +310,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       onSelected: (selected) {
         final notifier = ref.read(inboxProvider.notifier);
         final currentFilters =
-            ref.read(inboxProvider).valueOrNull?.filters ??
+            ref.read(inboxProvider).asData?.value.filters ??
             const InboxFilters();
 
         notifier.updateFilters(

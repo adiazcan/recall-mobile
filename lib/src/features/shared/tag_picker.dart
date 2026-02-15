@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../models/tag.dart';
+import 'design_tokens.dart';
 
 class TagPicker extends ConsumerStatefulWidget {
   const TagPicker({
@@ -93,8 +94,17 @@ class _TagPickerState extends ConsumerState<TagPicker> {
             runSpacing: 8,
             children: widget.selectedTags.map((tag) {
               return Chip(
-                label: Text(tag.name),
-                deleteIcon: const Icon(Icons.close, size: 18),
+                label: Text(
+                  tag.name,
+                  style: RecallTextStyles.detailTag.copyWith(
+                    color: RecallColors.tagGreenText,
+                  ),
+                ),
+                backgroundColor: RecallColors.tagGreenBg,
+                side: BorderSide.none,
+                deleteIconColor: RecallColors.tagGreenText,
+                deleteIcon: const Icon(Icons.close, size: 16),
+                visualDensity: VisualDensity.compact,
                 onDeleted: () => _toggleTag(tag),
               );
             }).toList(),
@@ -116,7 +126,7 @@ class _TagPickerState extends ConsumerState<TagPicker> {
                 if (unselectedTags.isNotEmpty) ...[
                   Text(
                     'Available tags:',
-                    style: Theme.of(context).textTheme.labelMedium,
+                    style: RecallTextStyles.detailSectionLabel,
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -124,7 +134,17 @@ class _TagPickerState extends ConsumerState<TagPicker> {
                     runSpacing: 8,
                     children: unselectedTags.map((tag) {
                       return ActionChip(
-                        label: Text(tag.name),
+                        label: Text(
+                          tag.name,
+                          style: RecallTextStyles.detailTag.copyWith(
+                            color: RecallColors.neutral600,
+                          ),
+                        ),
+                        backgroundColor: RecallColors.neutral050,
+                        side: const BorderSide(color: RecallColors.neutral200),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
                         onPressed: () => _toggleTag(tag),
                       );
                     }).toList(),
@@ -134,14 +154,38 @@ class _TagPickerState extends ConsumerState<TagPicker> {
 
                 // New tag input
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: TextField(
                         controller: _newTagController,
-                        decoration: const InputDecoration(
+                        style: RecallTextStyles.detailSectionValue,
+                        decoration: InputDecoration(
                           labelText: 'Create new tag',
                           hintText: 'Enter tag name',
-                          border: OutlineInputBorder(),
+                          labelStyle: RecallTextStyles.itemMeta,
+                          hintStyle: RecallTextStyles.detailSectionValue
+                              .copyWith(color: RecallColors.neutral400),
+                          filled: true,
+                          fillColor: RecallColors.neutral050,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: RecallColors.neutral200,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: RecallColors.neutral200,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: RecallColors.linkPurple,
+                            ),
+                          ),
                         ),
                         enabled: !_isCreatingTag,
                         onSubmitted: _createTag,
@@ -149,6 +193,13 @@ class _TagPickerState extends ConsumerState<TagPicker> {
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(64, 48),
+                        backgroundColor: RecallColors.neutral900,
+                        foregroundColor: RecallColors.white,
+                        disabledBackgroundColor: RecallColors.neutral300,
+                        disabledForegroundColor: RecallColors.white,
+                      ),
                       onPressed: _isCreatingTag
                           ? null
                           : () => _createTag(_newTagController.text),
@@ -156,7 +207,10 @@ class _TagPickerState extends ConsumerState<TagPicker> {
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: RecallColors.white,
+                              ),
                             )
                           : const Text('Add'),
                     ),
@@ -175,7 +229,9 @@ class _TagPickerState extends ConsumerState<TagPicker> {
             padding: const EdgeInsets.all(16),
             child: Text(
               'Failed to load tags: $error',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: RecallTextStyles.detailSectionValue.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ),
         ),

@@ -3,23 +3,44 @@ import UIKit
 import MSAL
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+
+  // Expose the key window via UIApplicationDelegate.window so that plugins
+  // (e.g. msal_flutter) that access UIApplication.shared.delegate?.window
+  // can find the root view controller in the scene-based lifecycle.
+  private var _window: UIWindow?
+  override var window: UIWindow? {
+    get {
+      return _window
+        ?? UIApplication.shared.connectedScenes
+             .compactMap { $0 as? UIWindowScene }
+             .flatMap { $0.windows }
+             .first { $0.isKeyWindow }
+        ?? UIApplication.shared.connectedScenes
+             .compactMap { $0 as? UIWindowScene }
+             .flatMap { $0.windows }
+             .first
+    }
+    set { _window = newValue }
+  }
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
     // Register method channel for pending shared URLs from Share Extension
-    guard let registrar = self.registrar(forPlugin: "PendingUrlsChannel") else {
-      return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-    }
     let pendingUrlsChannel = FlutterMethodChannel(
       name: "com.recall.mobile/pendingUrls",
-      binaryMessenger: registrar.messenger()
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
 
-    pendingUrlsChannel.setMethodCallHandler { [weak self] (call, result) in
+    pendingUrlsChannel.setMethodCallHandler { (call, result) in
       let appGroupId = Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as? String ?? "group.com.recall.mobile"
       let defaults = UserDefaults(suiteName: appGroupId)
 
@@ -48,14 +69,16 @@ import MSAL
         result(FlutterMethodNotImplemented)
       }
     }
-
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
     guard let sourceApplication = options[UIApplication.OpenURLOptionsKey.sourceApplication] as? String else {
-      return false
+      return super.application(app, open: url, options: options)
     }
-    return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: sourceApplication)
+    let handledByMSAL = MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: sourceApplication)
+    if handledByMSAL {
+      return true
+    }
+    return super.application(app, open: url, options: options)
   }
 }

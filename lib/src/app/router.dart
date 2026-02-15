@@ -99,7 +99,43 @@ GoRouter createRouter(Ref ref) {
           GoRoute(
             path: '/inbox',
             builder: (BuildContext context, GoRouterState state) {
-              return const InboxScreen();
+              return InboxScreen(key: ValueKey(state.uri.toString()));
+            },
+          ),
+          GoRoute(
+            path: '/favorites',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                viewFilter: InboxViewFilter.favorites,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/archive',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                viewFilter: InboxViewFilter.archive,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/collections/:id',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                collectionId: state.pathParameters['id'],
+              );
+            },
+          ),
+          GoRoute(
+            path: '/tags/:id',
+            builder: (BuildContext context, GoRouterState state) {
+              return InboxScreen(
+                key: ValueKey(state.uri.toString()),
+                tagId: state.pathParameters['id'],
+              );
             },
           ),
           GoRoute(
@@ -144,8 +180,11 @@ GoRouter createRouter(Ref ref) {
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Ref ref) {
-    ref.listen(authStateProvider, (previous, next) => notifyListeners());
-    ref.listen(sharedUrlProvider, (previous, next) {
+    ref.listen<AsyncValue<AuthState>>(
+      authStateProvider,
+      (previous, next) => notifyListeners(),
+    );
+    ref.listen<String?>(sharedUrlProvider, (previous, next) {
       // Notify router when a shared URL arrives
       if (next != null && next.isNotEmpty) {
         notifyListeners();

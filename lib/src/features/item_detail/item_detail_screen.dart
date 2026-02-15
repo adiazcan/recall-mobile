@@ -1,12 +1,16 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/collection.dart';
 import '../../models/item.dart';
 import '../../models/tag.dart';
 import '../collections/collections_providers.dart';
+import '../shared/design_tokens.dart';
 import '../shared/error_view.dart';
 import '../shared/tag_picker.dart';
 import 'item_detail_providers.dart';
@@ -22,29 +26,18 @@ class ItemDetailScreen extends ConsumerStatefulWidget {
 
 class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   bool _isUpdating = false;
-  _MutationError? _mutationError;
 
   Future<void> _openInBrowser(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Could not open URL: $url'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      _showMutationError(message: 'Could not open URL: $url');
     }
   }
 
   Future<void> _toggleFavorite(Item item) async {
-    setState(() {
-      _isUpdating = true;
-      _mutationError = null;
-    });
+    setState(() => _isUpdating = true);
     try {
       final notifier = ref.read(itemDetailNotifierProvider.notifier);
       await notifier.toggleFavorite(item.id, item.isFavorite);
@@ -71,10 +64,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 
   Future<void> _toggleArchive(Item item) async {
-    setState(() {
-      _isUpdating = true;
-      _mutationError = null;
-    });
+    setState(() => _isUpdating = true);
     try {
       final notifier = ref.read(itemDetailNotifierProvider.notifier);
       final newStatus = item.status == ItemStatus.unread
@@ -111,10 +101,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
 
     if (selectedTags != null && mounted) {
-      setState(() {
-        _isUpdating = true;
-        _mutationError = null;
-      });
+      setState(() => _isUpdating = true);
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
         await notifier.updateTags(item.id, selectedTags);
@@ -165,10 +152,7 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
           ? null
           : selectedCollectionId;
 
-      setState(() {
-        _isUpdating = true;
-        _mutationError = null;
-      });
+      setState(() => _isUpdating = true);
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
         await notifier.moveToCollection(item.id, targetCollectionId);
@@ -241,16 +225,13 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
-      setState(() {
-        _isUpdating = true;
-        _mutationError = null;
-      });
+      setState(() => _isUpdating = true);
       try {
         final notifier = ref.read(itemDetailNotifierProvider.notifier);
         await notifier.deleteItem(widget.itemId);
 
         if (mounted) {
-          Navigator.of(context).pop(); // Return to previous screen
+          Navigator.of(context).pop();
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Item deleted')));
@@ -258,54 +239,121 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       } catch (e) {
         if (mounted) {
           setState(() => _isUpdating = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete item: $e'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-          _showMutationError(
-            message: 'Failed to delete item: $e',
-            onRetry: _deleteItem,
-          );
         }
+        _showMutationError(
+          message: 'Failed to delete item: $e',
+          onRetry: _deleteItem,
+        );
       }
     }
   }
 
   void _showMutationError({
     required String message,
-    required Future<void> Function() onRetry,
+    Future<void> Function()? onRetry,
   }) {
     if (!mounted) return;
-    setState(() {
-      _mutationError = _MutationError(message: message, onRetry: onRetry);
-    });
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.hideCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        action: onRetry == null
+            ? null
+            : SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: () => unawaited(onRetry()),
+              ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final itemAsync = ref.watch(itemDetailProvider(widget.itemId));
+    final item = itemAsync.asData?.value;
 
     return Scaffold(
+      backgroundColor: RecallColors.white,
       appBar: AppBar(
-        title: const Text('Item Details'),
+        backgroundColor: RecallColors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.close, size: 20),
+          color: RecallColors.neutral400,
+          tooltip: 'Close',
+          constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+          padding: const EdgeInsets.all(8),
+        ),
         actions: [
+          if (item != null)
+            IconButton(
+              onPressed: _isUpdating ? null : () => _toggleFavorite(item),
+              icon: Icon(
+                item.isFavorite ? Icons.star : Icons.star_border,
+                size: 20,
+              ),
+              color: item.isFavorite
+                  ? RecallColors.favorite
+                  : RecallColors.neutral500,
+              tooltip: item.isFavorite ? 'Remove favorite' : 'Add favorite',
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+              padding: const EdgeInsets.all(8),
+            ),
+          if (item != null)
+            IconButton(
+              onPressed: _isUpdating ? null : () => _toggleArchive(item),
+              icon: Icon(
+                item.status == ItemStatus.archived
+                    ? Icons.unarchive_outlined
+                    : Icons.inventory_2_outlined,
+                size: 20,
+              ),
+              color: RecallColors.neutral500,
+              tooltip: item.status == ItemStatus.archived
+                  ? 'Unarchive'
+                  : 'Archive',
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+              padding: const EdgeInsets.all(8),
+            ),
+          if (item != null)
+            IconButton(
+              onPressed: _isUpdating ? null : _deleteItem,
+              icon: const Icon(Icons.delete_outline, size: 20),
+              color: RecallColors.neutral400,
+              tooltip: 'Delete',
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+              padding: const EdgeInsets.all(8),
+            ),
           if (_isUpdating)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
             ),
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: RecallColors.neutral200,
+          ),
+        ),
       ),
       body: itemAsync.when(
-        data: (item) => _buildItemDetails(item),
+        data: _buildItemDetails,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => ErrorView(
           message: 'Failed to load item: $error',
@@ -316,218 +364,203 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 
   Widget _buildItemDetails(Item item) {
+    final collectionsAsync = ref.watch(collectionsProvider);
+    final collectionLabel = collectionsAsync.when(
+      data: (collections) {
+        if (item.collectionId == null) {
+          return 'Inbox';
+        }
+        Collection? collection;
+        for (final entry in collections) {
+          if (entry.id == item.collectionId) {
+            collection = entry;
+            break;
+          }
+        }
+        return collection?.name ?? 'Unknown collection';
+      },
+      loading: () => 'Loading…',
+      error: (error, stackTrace) =>
+          item.collectionId == null ? 'Inbox' : 'Unknown collection',
+    );
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Preview image
           if (item.previewImageUrl != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: CachedNetworkImage(
-                imageUrl: item.previewImageUrl!,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 200,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Icon(Icons.broken_image, size: 48),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(
+                    color: RecallColors.shadow,
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: CachedNetworkImage(
+                  imageUrl: item.previewImageUrl!,
+                  width: double.infinity,
+                  height: 193,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 193,
+                    color: RecallColors.neutral100,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 193,
+                    color: RecallColors.neutral100,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.broken_image_outlined,
+                      size: 40,
+                      color: RecallColors.neutral400,
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
           ],
 
-          // Title
-          Text(item.title, style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 8),
-
-          // Domain
-          Row(
-            children: [
-              Icon(
-                Icons.language,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                item.domain,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+          Text(item.title, style: RecallTextStyles.detailTitle),
           const SizedBox(height: 16),
 
-          // Excerpt
-          if (item.excerpt != null && item.excerpt!.isNotEmpty) ...[
-            Text(item.excerpt!, style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 16),
-          ],
-
-          // Status and favorite indicators
-          Row(
-            children: [
-              Chip(
-                label: Text(item.status.name.toUpperCase()),
-                avatar: Icon(
-                  item.status == ItemStatus.archived
-                      ? Icons.archive
-                      : Icons.inbox,
-                  size: 18,
+          InkWell(
+            onTap: _isUpdating ? null : () => _openInBrowser(item.url),
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.open_in_new,
+                  size: 16,
+                  color: RecallColors.linkPurple,
                 ),
-              ),
-              const SizedBox(width: 8),
-              if (item.isFavorite)
-                const Chip(
-                  label: Text('FAVORITE'),
-                  avatar: Icon(Icons.star, size: 18),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    item.url,
+                    style: RecallTextStyles.detailUrl,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
 
-          // Tags
-          if (item.tags.isNotEmpty) ...[
-            Text('Tags', style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: item.tags.map((tag) {
-                return Chip(
-                  label: Text(tag.name),
-                  avatar: const Icon(Icons.label, size: 18),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Timestamps
-          Text(
-            'Created: ${_formatDate(item.createdAt)}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Updated: ${_formatDate(item.updatedAt)}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
           const SizedBox(height: 24),
 
-          if (_mutationError != null) ...[
-            ErrorView(
-              message: _mutationError!.message,
-              onRetry: () async {
-                setState(() {
-                  _isUpdating = true;
-                });
-                try {
-                  await _mutationError!.onRetry();
-                  if (mounted) {
-                    setState(() {
-                      _mutationError = null;
-                    });
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setState(() {
-                      _mutationError = _MutationError(
-                        message: 'Retry failed: $e',
-                        onRetry: _mutationError!.onRetry,
-                      );
-                    });
-                  }
-                } finally {
-                  if (mounted) {
-                    setState(() {
-                      _isUpdating = false;
-                    });
-                  }
-                }
-              },
-            ),
-            Align(
-              alignment: Alignment.center,
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    _mutationError = null;
-                  });
-                },
-                child: const Text('Dismiss'),
+          _SectionLabel(icon: Icons.folder_outlined, label: 'COLLECTION'),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: _isUpdating ? null : () => _moveToCollection(item),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: RecallColors.neutral050,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: RecallColors.neutral100),
+              ),
+              child: Text(
+                collectionLabel,
+                style: RecallTextStyles.detailSectionValue,
               ),
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
 
-          // Action buttons
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          const SizedBox(height: 16),
+
+          _SectionLabel(icon: Icons.tag, label: 'TAGS'),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              FilledButton.icon(
-                onPressed: _isUpdating ? null : () => _openInBrowser(item.url),
-                icon: const Icon(Icons.open_in_browser),
-                label: const Text('Open in Browser'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _isUpdating ? null : () => _toggleFavorite(item),
-                icon: Icon(item.isFavorite ? Icons.star : Icons.star_border),
-                label: Text(
-                  item.isFavorite
-                      ? 'Remove from Favorites'
-                      : 'Add to Favorites',
+              ...item.tags.map(
+                (tag) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: RecallColors.tagGreenBg,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    tag.name,
+                    style: RecallTextStyles.detailTag.copyWith(
+                      color: RecallColors.tagGreenText,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _isUpdating ? null : () => _toggleArchive(item),
-                icon: Icon(
-                  item.status == ItemStatus.archived
-                      ? Icons.unarchive
-                      : Icons.archive,
-                ),
-                label: Text(
-                  item.status == ItemStatus.archived ? 'Unarchive' : 'Archive',
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
+              OutlinedButton(
                 onPressed: _isUpdating ? null : () => _editTags(item),
-                icon: const Icon(Icons.label),
-                label: const Text('Edit Tags'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _isUpdating ? null : () => _moveToCollection(item),
-                icon: const Icon(Icons.folder),
-                label: const Text('Move to Collection'),
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: _isUpdating ? null : _deleteItem,
-                icon: const Icon(Icons.delete),
-                label: const Text('Delete'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
+                  minimumSize: const Size(0, 26),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  side: const BorderSide(color: RecallColors.neutral200),
+                  foregroundColor: RecallColors.neutral500,
+                  shape: const StadiumBorder(),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  textStyle: RecallTextStyles.detailTag.copyWith(
+                    color: RecallColors.neutral500,
+                  ),
                 ),
+                child: const Text('+ Add'),
               ),
             ],
+          ),
+
+          const SizedBox(height: 16),
+
+          _SectionLabel(icon: Icons.calendar_today_outlined, label: 'ADDED'),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Text(
+              _formatDate(item.createdAt),
+              style: RecallTextStyles.detailSectionValue,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: RecallColors.neutral100,
+          ),
+          const SizedBox(height: 20),
+
+          const Text(
+            'Personal Notes',
+            style: RecallTextStyles.detailNotesLabel,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 128,
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: RecallColors.neutral050,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: RecallColors.neutral200),
+            ),
+            child: Text(
+              'Add your thoughts here...',
+              style: RecallTextStyles.detailSectionValue.copyWith(
+                color: RecallColors.neutral700.withValues(alpha: 0.5),
+              ),
+            ),
           ),
         ],
       ),
@@ -535,19 +568,28 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
-        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return DateFormat('MMMM d, yyyy • h:mm a').format(date);
   }
 }
 
-class _MutationError {
-  const _MutationError({required this.message, required this.onRetry});
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.icon, required this.label});
 
-  final String message;
-  final Future<void> Function() onRetry;
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: RecallColors.neutral400),
+        const SizedBox(width: 8),
+        Text(label, style: RecallTextStyles.detailSectionLabel),
+      ],
+    );
+  }
 }
 
-// Tag edit bottom sheet
 class TagEditSheet extends StatefulWidget {
   const TagEditSheet({super.key, required this.initialTags});
 
@@ -568,49 +610,111 @@ class _TagEditSheetState extends State<TagEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.75;
+
     return SafeArea(
+      top: false,
       child: Padding(
         padding: EdgeInsets.only(
           left: 16,
           right: 16,
-          top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Edit Tags',
-                  style: Theme.of(context).textTheme.titleLarge,
+        child: Container(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            color: RecallColors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: RecallColors.neutral100),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: RecallColors.neutral200,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Edit Tags',
+                      style: RecallTextStyles.headerTitle,
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 20),
+                      color: RecallColors.neutral500,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TagPicker(
-              selectedTags: _selectedTags,
-              onTagsChanged: (tags) => setState(() => _selectedTags = tags),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(_selectedTags),
-              child: const Text('Save'),
-            ),
-          ],
+              ),
+              const Divider(
+                height: 1,
+                thickness: 1,
+                color: RecallColors.neutral100,
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  child: TagPicker(
+                    selectedTags: _selectedTags,
+                    onTagsChanged: (tags) =>
+                        setState(() => _selectedTags = tags),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(40),
+                          side: const BorderSide(
+                            color: RecallColors.neutral200,
+                          ),
+                          foregroundColor: RecallColors.neutral600,
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () =>
+                            Navigator.of(context).pop(_selectedTags),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(40),
+                          backgroundColor: RecallColors.neutral900,
+                          foregroundColor: RecallColors.white,
+                        ),
+                        child: const Text('Save'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// Collection picker dialog
 class CollectionPickerDialog extends ConsumerWidget {
   const CollectionPickerDialog({
     super.key,
@@ -632,7 +736,6 @@ class CollectionPickerDialog extends ConsumerWidget {
         child: ListView(
           shrinkWrap: true,
           children: [
-            // Inbox option
             ListTile(
               title: const Text('Inbox'),
               // ignore: deprecated_member_use
@@ -648,7 +751,6 @@ class CollectionPickerDialog extends ConsumerWidget {
               ).pop(CollectionPickerDialog.inboxSentinel),
             ),
             const Divider(),
-            // Collections
             ...collections.map((collection) {
               return ListTile(
                 title: Text(collection.name),

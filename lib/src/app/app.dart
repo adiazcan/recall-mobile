@@ -162,7 +162,7 @@ class _RecallAppState extends ConsumerState<RecallApp>
   Widget build(BuildContext context) {
     // Sync auth config to share extension whenever auth state changes
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (prev, next) {
-      final status = next.valueOrNull?.status;
+      final status = next.asData?.value.status;
       if (status == AuthStatus.authenticated) {
         debugPrint(
           '[Share] Auth state → authenticated, syncing token to extension',

@@ -33,7 +33,7 @@ class InboxFilters {
   }
 
   bool get hasActiveFilters =>
-      status != null ||
+      (status != null && status != 'unread') ||
       isFavorite != null ||
       collectionId != null ||
       (tagIds != null && tagIds!.isNotEmpty);
@@ -95,7 +95,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
     // Set initial state with cached items
     final initialState = InboxState(
       items: cachedItems,
-      filters: const InboxFilters(),
+      filters: const InboxFilters(status: 'unread'),
       nextCursor: null,
       hasMore: true, // Optimistically assume there may be more items
       isLoadingMore: false,
@@ -113,7 +113,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
     final apiClient = ref.read(apiClientProvider);
     final cacheService = await ref.read(cacheServiceProvider.future);
 
-    final currentState = state.valueOrNull;
+    final currentState = state.asData?.value;
     if (currentState == null) return;
 
     final cursor = resetList ? null : currentState.nextCursor;
@@ -189,7 +189,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
 
   // Load more items (infinite scroll)
   Future<void> loadMore() async {
-    final currentState = state.valueOrNull;
+    final currentState = state.asData?.value;
     if (currentState == null ||
         !currentState.hasMore ||
         currentState.isLoadingMore) {
@@ -203,7 +203,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
 
   // Update filters and refresh list
   Future<void> updateFilters(InboxFilters newFilters) async {
-    final currentState = state.valueOrNull;
+    final currentState = state.asData?.value;
     if (currentState == null) return;
 
     state = AsyncValue.data(
@@ -227,7 +227,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
 
   // Update a single item in the list (after mutation)
   void updateItem(Item updatedItem) {
-    final currentState = state.valueOrNull;
+    final currentState = state.asData?.value;
     if (currentState == null) return;
 
     final updatedItems = currentState.items.map((item) {
@@ -275,7 +275,7 @@ class InboxNotifier extends AsyncNotifier<InboxState> {
 
   // Remove an item from the list (after deletion)
   void removeItem(String itemId) {
-    final currentState = state.valueOrNull;
+    final currentState = state.asData?.value;
     if (currentState == null) return;
 
     final updatedItems = currentState.items
