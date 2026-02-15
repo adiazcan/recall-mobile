@@ -112,12 +112,12 @@ class Item {
     return value
         .map((tagJson) {
           if (tagJson is Map<String, dynamic>) {
-            final id = tagJson['id']?.toString();
-            final name = tagJson['name']?.toString();
-            if (id == null || id.isEmpty || name == null || name.isEmpty) {
+            try {
+              return Tag.fromJson(tagJson);
+            } on FormatException {
+              // Ignore invalid tag objects that cannot be parsed.
               return null;
             }
-            return Tag(id: id, name: name);
           }
 
           if (tagJson is String && tagJson.isNotEmpty) {

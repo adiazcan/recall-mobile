@@ -95,7 +95,7 @@ class ApiClient {
     if (status != null) data['status'] = status;
     if (isFavorite != null) data['isFavorite'] = isFavorite;
     if (collectionId != null) data['collectionId'] = collectionId;
-    if (tags != null) data['tags'] = tags;
+    if (tags != null) data['tagIds'] = tags;
 
     try {
       final response = await dio.patch('/api/v1/items/$id', data: data);
