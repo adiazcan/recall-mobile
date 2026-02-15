@@ -13,6 +13,7 @@ import '../shared/empty_state.dart';
 import '../shared/error_view.dart';
 import 'inbox_providers.dart';
 import 'item_card.dart';
+import 'quick_save_overlay.dart';
 
 enum InboxViewFilter { inbox, favorites, archive }
 
@@ -35,6 +36,7 @@ class InboxScreen extends ConsumerStatefulWidget {
 class _InboxScreenState extends ConsumerState<InboxScreen> {
   final _scrollController = ScrollController();
   bool _showFilterBar = false;
+  bool _showQuickSave = false;
 
   @override
   void initState() {
@@ -123,22 +125,43 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
     return Scaffold(
       appBar: _buildInboxAppBar(headerTitle, itemCount),
-      body: Column(
+      body: Stack(
         children: [
-          // Filter bar
-          if (_showFilterBar) _buildFilterBar(),
+          Column(
+            children: [
+              // Filter bar
+              if (_showFilterBar) _buildFilterBar(),
 
-          // Content
-          Expanded(
-            child: inboxState.when(
-              data: (state) => _buildContent(state),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => ErrorView(
-                message: 'Failed to load items: ${error.toString()}',
-                onRetry: () => ref.read(inboxProvider.notifier).refresh(),
+              // Content
+              Expanded(
+                child: inboxState.when(
+                  data: (state) => _buildContent(state),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => ErrorView(
+                    message: 'Failed to load items: ${error.toString()}',
+                    onRetry: () => ref.read(inboxProvider.notifier).refresh(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_showQuickSave)
+            Positioned(
+              left: 16,
+              right: 16,
+              top: 16,
+              child: QuickSaveOverlay(
+                onDismiss: () {
+                  if (!mounted) {
+                    return;
+                  }
+                  setState(() {
+                    _showQuickSave = false;
+                  });
+                },
               ),
             ),
-          ),
         ],
       ),
     );
@@ -214,7 +237,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           icon: _showFilterBar ? Icons.filter_alt : Icons.filter_alt_outlined,
           tooltip: 'Filters',
         ),
-        HeaderAddButton(onTap: () => context.push('/save')),
+        HeaderAddButton(
+          onTap: () {
+            setState(() {
+              _showQuickSave = true;
+            });
+          },
+        ),
       ],
     );
   }

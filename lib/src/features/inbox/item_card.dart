@@ -27,7 +27,8 @@ class ItemCard extends ConsumerWidget {
       apiBaseUrl: config.apiBaseUrl,
       bearerToken: token,
     );
-    final hasImage = imageUrl != null && (!requiresAuth || imageHeaders != null);
+    final hasImage =
+        imageUrl != null && (!requiresAuth || imageHeaders != null);
     final timeAgo = _formatTimeAgo(item.createdAt);
     final initial = _fallbackInitial();
 
@@ -208,7 +209,9 @@ class _FaviconTile extends StatelessWidget {
                 fit: BoxFit.cover,
                 imageBuilder: (context, imageProvider) {
                   if (logHttp) {
-                    debugPrint('[Image] Loaded inbox thumbnail item=$itemId url=$imageUrl');
+                    debugPrint(
+                      '[Image] Loaded inbox thumbnail item=$itemId url=$imageUrl',
+                    );
                   }
                   return Image(
                     image: imageProvider,
@@ -217,20 +220,19 @@ class _FaviconTile extends StatelessWidget {
                     fit: BoxFit.cover,
                   );
                 },
-                errorWidget: (context, url, error) =>
-                    Builder(
-                      builder: (context) {
-                        if (logHttp) {
-                          debugPrint(
-                            '[Image] Failed inbox thumbnail item=$itemId url=$url error=$error',
-                          );
-                        }
-                        return Text(
-                          initial,
-                          style: RecallTextStyles.faviconFallback,
-                        );
-                      },
-                    ),
+                errorWidget: (context, url, error) => Builder(
+                  builder: (context) {
+                    if (logHttp) {
+                      debugPrint(
+                        '[Image] Failed inbox thumbnail item=$itemId url=$url error=$error',
+                      );
+                    }
+                    return Text(
+                      initial,
+                      style: RecallTextStyles.faviconFallback,
+                    );
+                  },
+                ),
               ),
             )
           : Text(initial, style: RecallTextStyles.faviconFallback),

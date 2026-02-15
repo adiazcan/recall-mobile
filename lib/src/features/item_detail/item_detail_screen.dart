@@ -379,7 +379,8 @@ class _ItemDetailScreenState extends ConsumerState<ItemDetailScreen> {
       apiBaseUrl: appConfig.apiBaseUrl,
       bearerToken: token,
     );
-    final canRenderImage = imageUrl != null && (!requiresAuth || imageHeaders != null);
+    final canRenderImage =
+        imageUrl != null && (!requiresAuth || imageHeaders != null);
     if (appConfig.logHttp && rawImageUrl != null) {
       final source = item.previewImageUrl?.trim().isNotEmpty == true
           ? 'previewImageUrl'

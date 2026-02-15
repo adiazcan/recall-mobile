@@ -9,6 +9,7 @@ import '../collections/collections_providers.dart';
 import '../inbox/inbox_providers.dart';
 import '../shared/error_view.dart';
 import '../shared/tag_picker.dart';
+import '../shared/url_validator.dart';
 
 class SaveUrlScreen extends ConsumerStatefulWidget {
   const SaveUrlScreen({super.key, this.prefilledUrl});
@@ -42,22 +43,6 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
   void dispose() {
     _urlController.dispose();
     super.dispose();
-  }
-
-  String? _validateUrl(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter a URL';
-    }
-
-    final uri = Uri.tryParse(value.trim());
-    if (uri == null ||
-        !uri.hasScheme ||
-        (uri.scheme != 'http' && uri.scheme != 'https') ||
-        !uri.hasAuthority) {
-      return 'Please enter a valid URL (e.g., https://example.com)';
-    }
-
-    return null;
   }
 
   Future<void> _saveUrl() async {
@@ -155,7 +140,7 @@ class _SaveUrlScreenState extends ConsumerState<SaveUrlScreen> {
                   ),
                   keyboardType: TextInputType.url,
                   textInputAction: TextInputAction.next,
-                  validator: _validateUrl,
+                  validator: validateRequiredWebUrl,
                   enabled: !_isSaving,
                 ),
 

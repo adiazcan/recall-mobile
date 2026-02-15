@@ -68,20 +68,18 @@ class Item {
       title: (json['title'] as String?) ?? 'Untitled',
       excerpt: json['excerpt'] as String?,
       domain: (json['domain'] as String?) ?? '',
-      previewImageUrl: _readString(
-        json,
-        const [
-          'previewImageUrl',
-          'preview_image_url',
-          'preview_image',
-          'imageUrl',
-          'image_url',
-        ],
-      ),
-      thumbnailUrl: _readString(
-        json,
-        const ['thumbnailUrl', 'thumbnail_url', 'thumbnail'],
-      ),
+      previewImageUrl: _readString(json, const [
+        'previewImageUrl',
+        'preview_image_url',
+        'preview_image',
+        'imageUrl',
+        'image_url',
+      ]),
+      thumbnailUrl: _readString(json, const [
+        'thumbnailUrl',
+        'thumbnail_url',
+        'thumbnail',
+      ]),
       status: ItemStatus.fromJson((json['status'] as String?) ?? 'unread'),
       isFavorite: (json['isFavorite'] as bool?) ?? false,
       collectionId: json['collectionId'] as String?,
@@ -91,10 +89,7 @@ class Item {
     );
   }
 
-  static String? _readString(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
+  static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
       final value = json[key];
       if (value is String && value.trim().isNotEmpty) {
@@ -172,7 +167,7 @@ class Item {
       previewImageUrl: previewImageUrl != null
           ? previewImageUrl()
           : this.previewImageUrl,
-        thumbnailUrl: thumbnailUrl != null ? thumbnailUrl() : this.thumbnailUrl,
+      thumbnailUrl: thumbnailUrl != null ? thumbnailUrl() : this.thumbnailUrl,
       status: status ?? this.status,
       isFavorite: isFavorite ?? this.isFavorite,
       collectionId: collectionId != null ? collectionId() : this.collectionId,

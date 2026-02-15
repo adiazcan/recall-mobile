@@ -19,6 +19,17 @@ class RecallColors {
   static const shadow = Color(0x1A000000);
 }
 
+class RecallShadows {
+  static const quickSaveCard = [
+    BoxShadow(
+      color: RecallColors.shadow,
+      blurRadius: 25,
+      offset: Offset(0, 20),
+    ),
+    BoxShadow(color: RecallColors.shadow, blurRadius: 10, offset: Offset(0, 8)),
+  ];
+}
+
 class RecallTextStyles {
   static const drawerBrand = TextStyle(
     fontSize: 20,
@@ -156,5 +167,28 @@ class RecallTextStyles {
     fontSize: 12,
     fontWeight: FontWeight.w700,
     color: RecallColors.neutral400,
+  );
+
+  static const quickSaveInput = TextStyle(
+    fontSize: 14,
+    height: 1.43,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.1504,
+    color: RecallColors.neutral900,
+  );
+
+  static const quickSavePlaceholder = TextStyle(
+    fontSize: 14,
+    height: 1.43,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.1504,
+    color: Color(0x80171717),
+  );
+
+  static const quickSaveButton = TextStyle(
+    fontSize: 14,
+    height: 1.43,
+    fontWeight: FontWeight.w500,
+    letterSpacing: -0.1504,
   );
 }

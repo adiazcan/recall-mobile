@@ -40,15 +40,18 @@ void main() {
     expect(item.tags[1].name, 'personal');
   });
 
-  test('thumbnailImageUrl falls back to thumbnailUrl when previewImageUrl is null', () {
-    final json = baseItemJson()
-      ..['previewImageUrl'] = null
-      ..['thumbnailUrl'] = 'https://cdn.example.com/thumb.jpg';
+  test(
+    'thumbnailImageUrl falls back to thumbnailUrl when previewImageUrl is null',
+    () {
+      final json = baseItemJson()
+        ..['previewImageUrl'] = null
+        ..['thumbnailUrl'] = 'https://cdn.example.com/thumb.jpg';
 
-    final item = Item.fromJson(json);
+      final item = Item.fromJson(json);
 
-    expect(item.thumbnailImageUrl, 'https://cdn.example.com/thumb.jpg');
-  });
+      expect(item.thumbnailImageUrl, 'https://cdn.example.com/thumb.jpg');
+    },
+  );
 
   test('thumbnailImageUrl prefers previewImageUrl when both are present', () {
     final json = baseItemJson()
@@ -60,14 +63,17 @@ void main() {
     expect(item.thumbnailImageUrl, 'https://cdn.example.com/preview.jpg');
   });
 
-  test('Item.fromJson reads snake_case thumbnail_url when preview is missing', () {
-    final json = baseItemJson()
-      ..['thumbnail_url'] = 'https://cdn.example.com/thumb-snake.jpg';
+  test(
+    'Item.fromJson reads snake_case thumbnail_url when preview is missing',
+    () {
+      final json = baseItemJson()
+        ..['thumbnail_url'] = 'https://cdn.example.com/thumb-snake.jpg';
 
-    final item = Item.fromJson(json);
+      final item = Item.fromJson(json);
 
-    expect(item.thumbnailImageUrl, 'https://cdn.example.com/thumb-snake.jpg');
-  });
+      expect(item.thumbnailImageUrl, 'https://cdn.example.com/thumb-snake.jpg');
+    },
+  );
 
   test('Item.fromJson reads snake_case preview_image_url before thumbnail', () {
     final json = baseItemJson()
